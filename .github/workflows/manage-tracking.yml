@@ -1,0 +1,52 @@
+name: Manage Bill Status Tracking
+
+on:
+  workflow_dispatch:
+    inputs:
+      bill_no:
+        description: '의안번호 (예: 2220645)'
+        required: true
+        type: string
+      action:
+        description: '상태변경 알림 관리'
+        required: true
+        default: exclude
+        type: choice
+        options:
+          - exclude
+          - resume
+
+permissions:
+  contents: write
+
+jobs:
+  manage:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Update bill tracking setting
+        env:
+          BILL_NO: ${{ inputs.bill_no }}
+          TRACKING_ACTION: ${{ inputs.action }}
+        run: python manage_tracking.py
+
+      - name: Commit updated tracking setting
+        run: |
+          if git diff --quiet -- seen_bills.json; then
+            echo "No tracking setting changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- seen_bills.json
+          git commit -m "Update bill status tracking setting"
+          git pull --rebase origin main
+          git push origin HEAD:main
