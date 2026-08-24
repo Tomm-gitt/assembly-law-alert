@@ -35,13 +35,19 @@ def build_mail_html_enriched(bills: List[Dict]) -> str:
             reason_html = ""
 
         if points:
-            point_items = "".join(
-                f'<div style="display:flex;gap:8px;margin-top:7px;">'
-                f'<div style="font-weight:700;color:#334155;min-width:18px;">{i}.</div>'
-                f'<div style="font-size:14px;line-height:1.7;color:#1f2937;">{esc(point)}</div>'
-                f'</div>'
-                for i, point in enumerate(points, 1)
-            )
+            if len(points) == 1:
+                point_items = (
+                    f'<div style="margin-top:7px;font-size:14px;line-height:1.7;color:#1f2937;">'
+                    f'{esc(points[0])}</div>'
+                )
+            else:
+                point_items = "".join(
+                    f'<div style="display:flex;gap:8px;margin-top:7px;">'
+                    f'<div style="font-weight:700;color:#334155;min-width:18px;">{i}.</div>'
+                    f'<div style="font-size:14px;line-height:1.7;color:#1f2937;">{esc(point)}</div>'
+                    f'</div>'
+                    for i, point in enumerate(points, 1)
+                )
             main_html = f"""
               <div style="margin-top:14px;padding:14px 16px;background:#fffaf0;border-radius:8px;">
                 <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:5px;">주요내용</div>
