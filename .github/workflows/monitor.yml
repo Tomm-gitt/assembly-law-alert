@@ -17,8 +17,7 @@ permissions:
 
 jobs:
   monitor:
-    # Ubuntu/Windows GitHub-hosted runners are Azure-based. The National Assembly API
-    # timed out from Azure, so use GitHub's macOS runner network instead.
+    # Ubuntu/Windows GitHub-hosted runners에서 국회 API 연결이 timeout되어 macOS 사용
     runs-on: macos-latest
 
     steps:
@@ -41,7 +40,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
-        run: python monitor.py
+        run: python enriched_runner.py
 
       - name: Commit updated state
         run: |
