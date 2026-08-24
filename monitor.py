@@ -9,6 +9,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -21,6 +22,7 @@ PAGE_SIZE = 1000
 LOOKBACK_DAYS = 7
 MAX_PAGES = 10
 STATE_PATH = Path("seen_bills.json")
+KST = ZoneInfo("Asia/Seoul")
 
 WATCH_LAWS = [
     "식품위생법",
@@ -83,11 +85,7 @@ def parse_date(value: Optional[str]) -> Optional[date]:
 
 def request_api(session: requests.Session, endpoint: str, params: Dict[str, str]) -> Dict:
     api_key = required_env("ASSEMBLY_API_KEY")
-    query = {
-        "KEY": api_key,
-        "Type": "json",
-        **params,
-    }
+    query = {"KEY": api_key, "Type": "json", **params}
     url = f"{BASE_URL}/{endpoint}"
 
     last_error = None
@@ -95,8 +93,7 @@ def request_api(session: requests.Session, endpoint: str, params: Dict[str, str]
         try:
             response = session.get(url, params=query, timeout=30)
             response.raise_for_status()
-            data = response.json()
-            return data
+            return response.json()
         except Exception as exc:
             last_error = exc
             if attempt < 3:
@@ -116,44 +113,32 @@ def parse_rows(data: Dict, endpoint: str) -> List[Dict]:
     if not isinstance(container, list):
         result = data.get("RESULT")
         if isinstance(result, dict):
-            raise RuntimeError(
-                f"국회 API 오류 {result.get('CODE')}: {result.get('MESSAGE')}"
-            )
+            raise RuntimeError(f"국회 API 오류 {result.get('CODE')}: {result.get('MESSAGE')}")
         raise RuntimeError(f"예상하지 못한 API 응답: {endpoint}: {str(data)[:1000]}")
 
     rows: List[Dict] = []
     for section in container:
         if not isinstance(section, dict):
             continue
-
         for head in section.get("head", []) or []:
             if isinstance(head, dict) and isinstance(head.get("RESULT"), dict):
                 result = head["RESULT"]
                 code = result.get("CODE")
                 if code not in ("INFO-000", "INFO-200"):
-                    raise RuntimeError(
-                        f"국회 API 오류 {code}: {result.get('MESSAGE')}"
-                    )
-
+                    raise RuntimeError(f"국회 API 오류 {code}: {result.get('MESSAGE')}")
         section_rows = section.get("row")
         if isinstance(section_rows, list):
             rows.extend(section_rows)
-
     return rows
 
 
 def fetch_recent_member_bills(session: requests.Session, cutoff: date) -> List[Dict]:
     results: List[Dict] = []
-
     for page in range(1, MAX_PAGES + 1):
         data = request_api(
             session,
             MEMBER_BILLS_API,
-            {
-                "pIndex": str(page),
-                "pSize": str(PAGE_SIZE),
-                "AGE": AGE,
-            },
+            {"pIndex": str(page), "pSize": str(PAGE_SIZE), "AGE": AGE},
         )
         rows = parse_rows(data, MEMBER_BILLS_API)
         if not rows:
@@ -184,22 +169,16 @@ def fetch_recent_member_bills(session: requests.Session, cutoff: date) -> List[D
             break
         if len(rows) < PAGE_SIZE:
             break
-
     return results
 
 
 def fetch_recent_receipts(session: requests.Session, cutoff: date) -> List[Dict]:
     results: List[Dict] = []
-
     for page in range(1, MAX_PAGES + 1):
-        # BILLRCP는 AGE 필터를 신뢰하지 않고 응답의 ERACO로 제22대를 재검증한다.
         data = request_api(
             session,
             RECEIPT_API,
-            {
-                "pIndex": str(page),
-                "pSize": str(PAGE_SIZE),
-            },
+            {"pIndex": str(page), "pSize": str(PAGE_SIZE)},
         )
         rows = parse_rows(data, RECEIPT_API)
         if not rows:
@@ -231,12 +210,10 @@ def fetch_recent_receipts(session: requests.Session, cutoff: date) -> List[Dict]
                     }
                 )
 
-        # 최신순 응답을 전제로, 해당 페이지가 전부 컷오프보다 오래되면 중단.
         if page_dates and max(page_dates) < cutoff:
             break
         if len(rows) < PAGE_SIZE:
             break
-
     return results
 
 
@@ -260,7 +237,6 @@ def merge_by_bill_id(*groups: Iterable[Dict]) -> List[Dict]:
                     if bill.get(key):
                         current[key] = bill[key]
                 current["proposer_kind"] = "의원발의"
-
     return list(merged.values())
 
 
@@ -292,9 +268,8 @@ def html_escape(value: Optional[str]) -> str:
 
 
 def build_mail_html(bills: List[Dict]) -> str:
-    today_kst = datetime.utcnow() + timedelta(hours=9)
+    today_kst = datetime.now(KST)
     blocks = []
-
     for index, bill in enumerate(bills, 1):
         proposer = bill.get("proposer") or bill.get("proposer_kind") or "-"
         committee = bill.get("committee") or "미정/확인 전"
@@ -336,12 +311,8 @@ def build_mail_html(bills: List[Dict]) -> str:
         <div style="max-width:680px;margin:0 auto;padding:20px;">
           <div style="background:#ffffff;border-radius:12px;padding:24px;">
             <div style="font-size:13px;color:#6b7280;">국회 법률안 자동 모니터링</div>
-            <div style="font-size:23px;font-weight:700;margin-top:5px;color:#111827;">
-              신규 법률안 {len(bills)}건
-            </div>
-            <div style="font-size:14px;color:#6b7280;margin-top:5px;">
-              {today_kst.strftime('%Y.%m.%d')} · 지정 15개 법률 기준
-            </div>
+            <div style="font-size:23px;font-weight:700;margin-top:5px;color:#111827;">신규 법률안 {len(bills)}건</div>
+            <div style="font-size:14px;color:#6b7280;margin-top:5px;">{today_kst.strftime('%Y.%m.%d')} · 지정 15개 법률 기준</div>
             {''.join(blocks)}
             <div style="font-size:12px;color:#9ca3af;margin-top:18px;line-height:1.6;">
               신규 의안 여부를 빠르게 확인하기 위한 자동 알림입니다. 자사 관련 여부는 담당자가 의안 내용을 확인해 판단합니다.
@@ -371,13 +342,14 @@ def send_email(bills: List[Dict]) -> None:
 
 
 def main() -> int:
-    cutoff = date.today() - timedelta(days=LOOKBACK_DAYS - 1)
+    today_kst = datetime.now(KST).date()
+    cutoff = today_kst - timedelta(days=LOOKBACK_DAYS - 1)
     force_send_recent = os.getenv("FORCE_SEND_RECENT", "false").lower() == "true"
 
     session = requests.Session()
     session.headers.update(HEADERS)
 
-    print(f"[INFO] 기준일: {date.today()} / 조회 시작일: {cutoff}")
+    print(f"[INFO] 기준일(KST): {today_kst} / 조회 시작일: {cutoff}")
     member_bills = fetch_recent_member_bills(session, cutoff)
     print(f"[INFO] 최근 의원발의 법률안: {len(member_bills)}건")
 
@@ -385,7 +357,6 @@ def main() -> int:
     print(f"[INFO] 최근 접수 법률안: {len(receipt_bills)}건")
 
     all_bills = merge_by_bill_id(receipt_bills, member_bills)
-
     watched: List[Dict] = []
     for bill in all_bills:
         matched_law = match_watched_law(str(bill.get("bill_name") or ""))
@@ -393,7 +364,10 @@ def main() -> int:
             bill["matched_law"] = matched_law
             watched.append(bill)
 
-    watched.sort(key=lambda x: (str(x.get("proposal_date") or ""), str(x.get("bill_no") or "")), reverse=True)
+    watched.sort(
+        key=lambda x: (str(x.get("proposal_date") or ""), str(x.get("bill_no") or "")),
+        reverse=True,
+    )
     print(f"[INFO] 지정 15개 법률 매칭: {len(watched)}건")
 
     seen = load_seen()
@@ -405,7 +379,7 @@ def main() -> int:
     else:
         new_bills = [bill for bill in watched if bill["bill_id"] not in seen]
 
-    now = datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    now = datetime.now(KST).isoformat(timespec="seconds")
     for bill in watched:
         bill_id = bill["bill_id"]
         if bill_id not in seen:
@@ -419,7 +393,7 @@ def main() -> int:
 
     save_seen(seen)
 
-    # 첫 자동 실행에서는 과거 최근 7일분이 한꺼번에 발송되지 않도록 상태만 초기화한다.
+    # 첫 자동 실행에서는 최근 7일분이 한꺼번에 발송되지 않도록 기준 데이터만 만든다.
     if state_was_empty and not force_send_recent:
         print(f"[INFO] 최초 실행: {len(watched)}건을 기준 데이터로 저장하고 메일은 발송하지 않습니다.")
         return 0
