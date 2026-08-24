@@ -17,7 +17,9 @@ permissions:
 
 jobs:
   monitor:
-    runs-on: ubuntu-latest
+    # Ubuntu/Windows GitHub-hosted runners are Azure-based. The National Assembly API
+    # timed out from Azure, so use GitHub's macOS runner network instead.
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
