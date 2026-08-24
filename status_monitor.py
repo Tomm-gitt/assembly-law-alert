@@ -67,18 +67,64 @@ def safe_rows(session: requests.Session, endpoint: str, params: Dict[str, str]) 
         raise
 
 
-def fetch_one(session: requests.Session, endpoint: str, bill_id: str, include_age: bool = False) -> Optional[Dict]:
-    params = {"pIndex": "1", "pSize": "5", "BILL_ID": bill_id}
-    if include_age:
-        params["AGE"] = monitor.AGE
-    rows = safe_rows(session, endpoint, params)
-    return rows[0] if rows else None
+def row_bill_name(row: Dict) -> str:
+    return first_value(row.get("BILL_NAME"), row.get("BILL_NM"))
 
 
-def fetch_lifecycle(session: requests.Session, bill_id: str) -> Dict[str, str]:
-    member = fetch_one(session, monitor.MEMBER_BILLS_API, bill_id, include_age=True) or {}
-    judge = fetch_one(session, JUDGE_API, bill_id) or {}
-    processed = fetch_one(session, PROCESSED_API, bill_id, include_age=True) or {}
+def row_matches(row: Dict, bill_id: str, bill_no: str) -> bool:
+    row_id = clean(row.get("BILL_ID"))
+    row_no = clean(row.get("BILL_NO"))
+    if bill_id and row_id == bill_id:
+        return True
+    if bill_no and row_no == bill_no:
+        return True
+    return False
+
+
+def fetch_matching_row(
+    session: requests.Session,
+    endpoint: str,
+    entry: Dict,
+    include_age: bool = False,
+) -> Optional[Dict]:
+    """Query several supported-looking filters, but only accept an identity-verified row."""
+    bill_id = clean(entry.get("bill_id"))
+    bill_no = clean(entry.get("bill_no"))
+    bill_name = clean(entry.get("bill_name"))
+
+    name_param = "BILL_NM" if endpoint == JUDGE_API else "BILL_NAME"
+    attempts: List[Dict[str, str]] = []
+    if bill_id:
+        attempts.append({"BILL_ID": bill_id})
+    if bill_no:
+        attempts.append({"BILL_NO": bill_no})
+    if bill_name:
+        attempts.append({name_param: bill_name})
+
+    for extra in attempts:
+        params = {"pIndex": "1", "pSize": "100", **extra}
+        if include_age:
+            params["AGE"] = monitor.AGE
+        rows = safe_rows(session, endpoint, params)
+        for row in rows:
+            if row_matches(row, bill_id, bill_no):
+                return row
+
+        if rows:
+            sample = rows[0]
+            print(
+                f"[WARN] {endpoint} 검색조건 {list(extra.keys())[0]}가 정확한 의안을 반환하지 않음: "
+                f"요청 {bill_no or bill_id} / 첫 반환 {clean(sample.get('BILL_NO')) or clean(sample.get('BILL_ID')) or '-'}"
+            )
+
+    return None
+
+
+def fetch_lifecycle(session: requests.Session, bill_id: str, entry: Dict) -> Dict[str, str]:
+    lookup = {**entry, "bill_id": bill_id}
+    member = fetch_matching_row(session, monitor.MEMBER_BILLS_API, lookup, include_age=True) or {}
+    judge = fetch_matching_row(session, JUDGE_API, lookup) or {}
+    processed = fetch_matching_row(session, PROCESSED_API, lookup, include_age=True) or {}
 
     if not member and not judge and not processed:
         return {}
@@ -175,7 +221,7 @@ def highest_stage(snapshot: Dict) -> str:
     for key, label in order:
         if clean(snapshot.get(key)):
             return label
-    return "접수"
+    return "발의/접수"
 
 
 def esc(value) -> str:
@@ -284,7 +330,7 @@ def main() -> int:
 
     try:
         for bill_id, entry in seen.items():
-            current_raw = fetch_lifecycle(session, bill_id)
+            current_raw = fetch_lifecycle(session, bill_id, entry)
             if not current_raw:
                 print(f"[WARN] 상태조회 실패/데이터 없음: {entry.get('bill_no') or bill_id}")
                 continue
