@@ -6,8 +6,39 @@ import monitor
 from content_enrichment import enrich_bills
 
 
+LAW_SUBJECT_KEYWORDS = {
+    "식품위생법": "식품위생",
+    "건강기능식품에 관한 법률": "건강기능식품",
+    "식품 등의 표시·광고에 관한 법률": "식품표시광고",
+    "제조물 책임법": "제조물책임",
+    "자원의 절약과 재활용촉진에 관한 법률": "자원재활용",
+    "농수산물의 원산지 표시 등에 관한 법률": "원산지표시",
+    "독점규제 및 공정거래에 관한 법률": "공정거래",
+    "가맹사업거래의 공정화에 관한 법률": "가맹사업",
+    "약관의 규제에 관한 법률": "약관규제",
+    "소비자기본법": "소비자기본",
+    "하도급거래 공정화에 관한 법률": "하도급",
+    "전자상거래 등에서의 소비자보호에 관한 법률": "전자상거래",
+    "표시·광고의 공정화에 관한 법률": "표시광고",
+    "인삼산업법": "인삼",
+    "농수산물 품질관리법": "농수산물품질",
+}
+
+
 def esc(value) -> str:
     return html.escape(str(value or "-"))
+
+
+def build_subject(bills: List[Dict]) -> str:
+    keywords = []
+    for bill in bills:
+        law = str(bill.get("matched_law") or "").strip()
+        keyword = LAW_SUBJECT_KEYWORDS.get(law)
+        if keyword and keyword not in keywords:
+            keywords.append(keyword)
+
+    suffix = "".join(f"_{keyword}" for keyword in keywords)
+    return f"[국회 법률안] 신규 {len(bills)}건{suffix}"
 
 
 def build_mail_html_enriched(bills: List[Dict]) -> str:
@@ -111,12 +142,22 @@ def build_mail_html_enriched(bills: List[Dict]) -> str:
     """
 
 
-_original_send_email = monitor.send_email
-
-
 def send_email_enriched(bills: List[Dict]) -> None:
     enrich_bills(bills)
-    _original_send_email(bills)
+
+    gmail_user = monitor.required_env("GMAIL_USER")
+    gmail_password = monitor.required_env("GMAIL_APP_PASSWORD")
+    mail_to = monitor.required_env("MAIL_TO")
+
+    msg = monitor.MIMEMultipart("alternative")
+    msg["Subject"] = build_subject(bills)
+    msg["From"] = gmail_user
+    msg["To"] = mail_to
+    msg.attach(monitor.MIMEText(build_mail_html_enriched(bills), "html", "utf-8"))
+
+    with monitor.smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as smtp:
+        smtp.login(gmail_user, gmail_password)
+        smtp.sendmail(gmail_user, [mail_to], msg.as_string())
 
 
 monitor.build_mail_html = build_mail_html_enriched
