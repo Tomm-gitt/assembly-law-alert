@@ -22,9 +22,9 @@ def save_seen(seen):
 
 def normalize_action(value: str) -> bool:
     value = (value or "").strip().lower()
-    if value == "exclude":
+    if value in {"exclude", "상태추적 제외"}:
         return False
-    if value == "resume":
+    if value in {"resume", "상태추적 재개"}:
         return True
     raise ValueError(f"지원하지 않는 동작입니다: {value}")
 
