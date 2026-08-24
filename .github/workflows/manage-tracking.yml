@@ -10,11 +10,11 @@ on:
       action:
         description: '상태변경 알림 관리'
         required: true
-        default: exclude
+        default: '상태추적 제외'
         type: choice
         options:
-          - exclude
-          - resume
+          - '상태추적 제외'
+          - '상태추적 재개'
 
 permissions:
   contents: write
