@@ -54,7 +54,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
-        run: python status_monitor.py
+        run: python status_alert_runner.py
 
       - name: Commit updated state
         run: |
