@@ -11,6 +11,11 @@ on:
         required: false
         default: false
         type: boolean
+      force_send_status_test:
+        description: '추적 의안의 현재 진행상태를 테스트 메일로 강제 발송'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -33,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run monitor
+      - name: Run new bill monitor
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
@@ -41,6 +46,15 @@ jobs:
           MAIL_TO: ${{ secrets.MAIL_TO }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
         run: python enriched_runner.py
+
+      - name: Run status change monitor
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
+        run: python status_monitor.py
 
       - name: Commit updated state
         run: |
