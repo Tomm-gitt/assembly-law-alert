@@ -18,6 +18,42 @@ def query_variants(law: str) -> List[str]:
     return list(dict.fromkeys(variants))
 
 
+def parse_rows_allow_empty(data: Dict, endpoint: str) -> List[Dict]:
+    """Like monitor.parse_rows(), but INFO-200 means a valid empty result for validation."""
+    container = data.get(endpoint)
+    if container is None:
+        for key, value in data.items():
+            if key.upper() == endpoint.upper():
+                container = value
+                break
+
+    if not isinstance(container, list):
+        result = data.get("RESULT")
+        if isinstance(result, dict):
+            code = result.get("CODE")
+            if code == "INFO-200":
+                return []
+            raise RuntimeError(f"국회 API 오류 {code}: {result.get('MESSAGE')}")
+        raise RuntimeError(f"예상하지 못한 API 응답: {endpoint}: {str(data)[:1000]}")
+
+    rows: List[Dict] = []
+    for section in container:
+        if not isinstance(section, dict):
+            continue
+        for head in section.get("head", []) or []:
+            if isinstance(head, dict) and isinstance(head.get("RESULT"), dict):
+                result = head["RESULT"]
+                code = result.get("CODE")
+                if code == "INFO-200":
+                    continue
+                if code != "INFO-000":
+                    raise RuntimeError(f"국회 API 오류 {code}: {result.get('MESSAGE')}")
+        section_rows = section.get("row")
+        if isinstance(section_rows, list):
+            rows.extend(section_rows)
+    return rows
+
+
 def fetch_samples(session: requests.Session, law: str) -> Tuple[str, List[Dict]]:
     """Find real Assembly member-sponsored bill samples, preferring the 22nd Assembly."""
     for age in AGES:
@@ -33,7 +69,7 @@ def fetch_samples(session: requests.Session, law: str) -> Tuple[str, List[Dict]]
                     "BILL_NAME": query,
                 },
             )
-            rows = monitor.parse_rows(data, monitor.MEMBER_BILLS_API)
+            rows = parse_rows_allow_empty(data, monitor.MEMBER_BILLS_API)
             for row in rows:
                 bill_id = str(row.get("BILL_ID") or "")
                 if bill_id:
