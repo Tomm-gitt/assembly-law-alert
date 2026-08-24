@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 
 LIKMS_BASE = "https://likms.assembly.go.kr/bill/billDetail.do"
+LAWMAKING_BASE = "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out"
 
 STOP_MARKERS = [
     "소관위 심사정보",
@@ -40,25 +41,37 @@ def build_detail_url(bill: Dict) -> str:
     return f"{LIKMS_BASE}?billId={bill_id}&ageFrom=22&ageTo=22"
 
 
+def build_lawmaking_url(bill: Dict) -> str:
+    bill_no = re.sub(r"\D", "", str(bill.get("bill_no") or ""))
+    if not bill_no:
+        return ""
+    return f"{LAWMAKING_BASE}/{bill_no}/detailRP"
+
+
 def _extract_relevant_segment(page_text: str) -> str:
     candidates = [
         "▶ 제안이유 및 주요내용",
-        "제안이유 및 주요내용",
         "대안의 제안이유 및 주요내용",
+        "제안이유 및 주요내용",
     ]
 
-    start = -1
-    marker = ""
+    starts = []
     for candidate in candidates:
-        idx = page_text.find(candidate)
-        if idx >= 0 and (start < 0 or idx < start):
-            start = idx
-            marker = candidate
+        pos = 0
+        while True:
+            idx = page_text.find(candidate, pos)
+            if idx < 0:
+                break
+            starts.append((idx, candidate))
+            pos = idx + len(candidate)
 
-    if start < 0:
+    if not starts:
         return ""
 
+    # 제목/메뉴에 같은 문구가 한 번 더 등장하는 페이지가 있어 마지막 출현을 본문 시작점으로 사용한다.
+    start, marker = max(starts, key=lambda x: x[0])
     segment = page_text[start + len(marker):]
+
     end_positions = []
     for stop in STOP_MARKERS:
         idx = segment.find(stop)
@@ -93,20 +106,62 @@ def _split_reason_main(segment: str) -> Dict[str, str]:
         main = clean_inline(main_match.group(1) if main_match else "")
         return {"proposal_reason": reason, "main_content": main}
 
-    # 일부 법안은 제안이유와 주요내용을 구분하지 않고 하나의 본문으로 제공한다.
+    # 국민참여입법센터는 두 항목을 한 본문으로 제공하는 경우가 많다.
+    # 대부분 문제/현황 설명 뒤 "이에 ..."로 실제 개정내용이 시작된다.
+    pivot = re.search(r"(?:^|\n|\s)(이에(?:\s+따라)?\s+)", text)
+    if pivot and pivot.start() > 40:
+        reason = clean_inline(text[: pivot.start()])
+        main = clean_inline(text[pivot.start():])
+        return {"proposal_reason": reason, "main_content": main}
+
     return {"proposal_reason": "", "main_content": clean_inline(text)}
 
 
-def fetch_bill_content(bill: Dict, session: Optional[requests.Session] = None) -> Dict[str, str]:
-    url = build_detail_url(bill)
-    if not url:
-        return {
-            "proposal_reason": "",
-            "main_content": "",
-            "content_source": "",
-            "content_error": "상세 링크가 없습니다.",
-        }
+def _extract_from_lawmaking_html(html: str) -> Dict[str, str]:
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
 
+    # 표 형식: <th>제안이유 및 주요내용</th><td>본문...</td>
+    for label in soup.find_all(["th", "dt", "strong", "span", "div"]):
+        label_text = clean_inline(label.get_text(" ", strip=True))
+        if label_text != "제안이유 및 주요내용":
+            continue
+
+        if label.name == "th":
+            td = label.find_next_sibling("td")
+            if td:
+                body = clean_inline(td.get_text("\n", strip=True))
+                if len(body) >= 30:
+                    return _split_reason_main(body)
+        if label.name == "dt":
+            dd = label.find_next_sibling("dd")
+            if dd:
+                body = clean_inline(dd.get_text("\n", strip=True))
+                if len(body) >= 30:
+                    return _split_reason_main(body)
+
+        parent = label.parent
+        if parent:
+            text = clean_inline(parent.get_text("\n", strip=True))
+            if len(text) >= 50:
+                segment = _extract_relevant_segment(text)
+                if segment:
+                    return _split_reason_main(segment)
+
+    page_text = clean_inline(soup.get_text("\n", strip=True))
+    segment = _extract_relevant_segment(page_text)
+    return _split_reason_main(segment)
+
+
+def _get_html(session: requests.Session, url: str) -> str:
+    response = session.get(url, timeout=30)
+    response.raise_for_status()
+    response.encoding = response.apparent_encoding or response.encoding or "utf-8"
+    return response.text
+
+
+def fetch_bill_content(bill: Dict, session: Optional[requests.Session] = None) -> Dict[str, str]:
     own_session = session is None
     session = session or requests.Session()
     session.headers.update(
@@ -117,39 +172,47 @@ def fetch_bill_content(bill: Dict, session: Optional[requests.Session] = None) -
         }
     )
 
+    errors = []
     try:
-        response = session.get(url, timeout=30)
-        response.raise_for_status()
-        response.encoding = response.apparent_encoding or response.encoding or "utf-8"
+        # 1순위: 국민참여입법센터. 의안번호 기반이며 본문 텍스트가 정적 HTML에 노출된다.
+        lawmaking_url = build_lawmaking_url(bill)
+        if lawmaking_url:
+            try:
+                parts = _extract_from_lawmaking_html(_get_html(session, lawmaking_url))
+                if parts["proposal_reason"] or parts["main_content"]:
+                    return {
+                        **parts,
+                        "content_source": "국민참여입법센터",
+                        "content_error": "",
+                    }
+                errors.append("국민참여입법센터: 제안이유 및 주요내용 영역을 찾지 못했습니다.")
+            except Exception as exc:
+                errors.append(f"국민참여입법센터: {exc}")
 
-        soup = BeautifulSoup(response.text, "html.parser")
-        for tag in soup(["script", "style", "noscript"]):
-            tag.decompose()
+        # 2순위 fallback: LIKMS 상세페이지
+        likms_url = build_detail_url(bill)
+        if likms_url:
+            try:
+                soup = BeautifulSoup(_get_html(session, likms_url), "html.parser")
+                for tag in soup(["script", "style", "noscript"]):
+                    tag.decompose()
+                raw_text = clean_inline(soup.get_text("\n", strip=True))
+                parts = _split_reason_main(_extract_relevant_segment(raw_text))
+                if parts["proposal_reason"] or parts["main_content"]:
+                    return {
+                        **parts,
+                        "content_source": "LIKMS",
+                        "content_error": "",
+                    }
+                errors.append("LIKMS: 제안이유 및 주요내용 영역을 찾지 못했습니다.")
+            except Exception as exc:
+                errors.append(f"LIKMS: {exc}")
 
-        raw_text = soup.get_text("\n", strip=True)
-        raw_text = clean_inline(raw_text)
-        segment = _extract_relevant_segment(raw_text)
-        parts = _split_reason_main(segment)
-
-        if not parts["proposal_reason"] and not parts["main_content"]:
-            return {
-                "proposal_reason": "",
-                "main_content": "",
-                "content_source": "LIKMS",
-                "content_error": "제안이유 및 주요내용 영역을 찾지 못했습니다.",
-            }
-
-        return {
-            **parts,
-            "content_source": "LIKMS",
-            "content_error": "",
-        }
-    except Exception as exc:
         return {
             "proposal_reason": "",
             "main_content": "",
-            "content_source": "LIKMS",
-            "content_error": str(exc),
+            "content_source": "",
+            "content_error": " / ".join(errors) or "원문 수집 경로가 없습니다.",
         }
     finally:
         if own_session:
@@ -179,7 +242,6 @@ def main_content_points(text: str) -> List[str]:
     if not text:
         return []
 
-    # 원문에서 이미 항목 구분(○, ①, 가., 1. 등)이 있으면 그 구조를 최대한 유지한다.
     raw_lines = [line.strip() for line in text.splitlines() if line.strip()]
     bullet_re = re.compile(r"^(?:[○●□■※▶▷]|\(?\d+\)?[.)]|[①-⑳]|[가-하][.)])\s*")
 
@@ -197,7 +259,6 @@ def main_content_points(text: str) -> List[str]:
             points.append(clean_inline(current))
         return [p for p in points if p]
 
-    # 구조가 없는 단일 문단은 문장을 350자 안팎의 덩어리로 나눠 원문 누락 없이 번호화한다.
     sentences = [s.strip() for s in re.split(r"(?<=[.!?。])\s+|(?<=임)\s+|(?<=함)\s+", text) if s.strip()]
     if len(sentences) <= 1:
         return [text]
@@ -227,6 +288,7 @@ def enrich_bills(bills: List[Dict]) -> None:
             print(
                 "[INFO] 원문 수집",
                 bill.get("bill_no"),
+                f"source={content.get('content_source') or '-'}",
                 f"reason={len(content.get('proposal_reason', ''))}",
                 f"main={len(content.get('main_content', ''))}",
                 f"error={content.get('content_error') or '-'}",
