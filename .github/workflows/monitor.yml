@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       force_send_recent:
-        description: '최근 7일 매칭 건을 테스트 메일로 강제 발송'
+        description: '최근 7일 매칭 건을 테스트 메일/텔레그램으로 강제 발송'
         required: false
         default: false
         type: boolean
       force_send_status_test:
-        description: '추적 의안의 현재 진행상태를 테스트 메일로 강제 발송'
+        description: '추적 의안의 현재 진행상태를 테스트 메일/텔레그램으로 강제 발송'
         required: false
         default: false
         type: boolean
@@ -44,8 +44,10 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
-        run: python enriched_runner.py
+        run: python telegram_enriched_runner.py
 
       - name: Run status change monitor
         env:
@@ -53,8 +55,10 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
-        run: python status_alert_runner.py
+        run: python telegram_status_runner.py
 
       - name: Commit updated state
         run: |
