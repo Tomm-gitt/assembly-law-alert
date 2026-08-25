@@ -22,6 +22,7 @@ permissions:
 
 jobs:
   monitor:
+    # Ubuntu/Windows GitHub-hosted runners에서 국회 API 연결이 timeout되어 macOS 사용
     runs-on: macos-latest
 
     steps:
