@@ -49,6 +49,11 @@ jobs:
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
         run: python telegram_enriched_runner.py
 
+      - name: Discover legacy bills with new late-stage events
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python late_stage_discovery.py
+
       - name: Run status change monitor
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
@@ -72,15 +77,15 @@ jobs:
 
       - name: Commit updated state
         run: |
-          if [ -z "$(git status --porcelain -- seen_bills.json law_effective_state.json)" ]; then
+          if [ -z "$(git status --porcelain -- seen_bills.json late_stage_discovery_state.json)" ]; then
             echo "No state changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- seen_bills.json
-          if [ -f law_effective_state.json ]; then
-            git add -- law_effective_state.json
+          if [ -f late_stage_discovery_state.json ]; then
+            git add -- late_stage_discovery_state.json
           fi
           git commit -m "Update law monitoring state"
           git push

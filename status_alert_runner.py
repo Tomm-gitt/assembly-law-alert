@@ -4,25 +4,48 @@ from datetime import datetime
 import requests
 
 import status_monitor
+from post_plenary import fetch_post_plenary_status
 
-# 메일 피로도를 줄이기 위해 실제 알림은 핵심 3단계만 사용한다.
+# 실제 알림은 핵심 단계만 사용한다.
 status_monitor.MILESTONES = [
     ("committee_referral_date", "소관위원회 회부"),
     ("law_submit_date", "법제사법위원회 회부"),
     ("plenary_date", "본회의 처리"),
+    ("government_transfer_date", "정부이송"),
 ]
 
+_original_fetch_lifecycle = status_monitor.fetch_lifecycle
+_original_highest_stage = status_monitor.highest_stage
 _original_build_mail_html = status_monitor.build_mail_html
+
+
+def fetch_lifecycle_with_transfer(session, bill_id, entry):
+    current = _original_fetch_lifecycle(session, bill_id, entry) or {}
+    try:
+        post = fetch_post_plenary_status({**entry, "bill_id": bill_id}, session=session)
+        if post.get("government_transfer_date"):
+            current["government_transfer_date"] = post["government_transfer_date"]
+    except Exception as exc:
+        print(f"[WARN] 정부이송 조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
+    return current
+
+
+def highest_stage_with_transfer(snapshot):
+    if status_monitor.clean(snapshot.get("government_transfer_date")):
+        return "정부이송"
+    return _original_highest_stage(snapshot)
 
 
 def build_mail_html_filtered(alerts):
     html = _original_build_mail_html(alerts)
     return html.replace(
         "소관위원회 회부·상정·처리, 법제사법위원회 진행, 본회의 처리 등 의미 있는 단계가 새로 확인될 때만 발송합니다.",
-        "소관위원회 회부, 법제사법위원회 회부, 본회의 처리의 3개 핵심 단계가 새로 확인될 때만 발송합니다.",
+        "소관위원회 회부, 법제사법위원회 회부, 본회의 처리, 정부이송의 핵심 단계가 새로 확인될 때만 발송합니다.",
     )
 
 
+status_monitor.fetch_lifecycle = fetch_lifecycle_with_transfer
+status_monitor.highest_stage = highest_stage_with_transfer
 status_monitor.build_mail_html = build_mail_html_filtered
 
 
@@ -53,6 +76,17 @@ def main() -> int:
             current = status_monitor.merge_snapshot(previous, current_raw)
             changes = status_monitor.detect_changes(previous, current) if previous else []
 
+            # 과거 의안이 앞으로 정부이송 단계에서 처음 발견된 경우 그 이벤트만 1회 알림한다.
+            if not previous and entry.get("late_stage_discovered_event") == "정부이송":
+                transfer_date = current.get("government_transfer_date")
+                if transfer_date:
+                    changes = [{
+                        "field": "government_transfer_date",
+                        "label": "정부이송",
+                        "old": "",
+                        "new": transfer_date,
+                    }]
+
             entry["lifecycle"] = current
             entry["last_status_checked_at"] = now
             if not entry.get("lifecycle_initialized_at"):
@@ -70,6 +104,7 @@ def main() -> int:
                     }
                 )
                 entry["last_status_changed_at"] = now
+                entry.pop("late_stage_discovered_event", None)
                 print(
                     f"[INFO] 상태변경 감지: {entry.get('bill_no')} / "
                     f"{status_monitor.highest_stage(current)} / {len(changes)}개"

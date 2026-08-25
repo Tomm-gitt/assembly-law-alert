@@ -1,5 +1,4 @@
 import html
-import json
 import os
 import re
 import smtplib
@@ -7,16 +6,16 @@ import sys
 from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from pathlib import Path
 from typing import Dict, List
+from urllib.parse import quote
 
 import requests
 
 import monitor
+from post_plenary import fetch_post_plenary_status
 from telegram_notify import _send as telegram_send
 
 LAW_API_URL = "https://www.law.go.kr/DRF/lawSearch.do"
-STATE_PATH = Path("law_effective_state.json")
 
 LAW_SUBJECT_KEYWORDS = {
     "식품위생법": "식품위생",
@@ -58,34 +57,11 @@ def date_digits(value: str) -> str:
     return digits[:8] if len(digits) >= 8 else ""
 
 
-def law_link(value: str) -> str:
-    value = clean(value)
-    if not value:
-        return "https://www.law.go.kr"
-    if value.startswith("http://"):
-        return "https://" + value[len("http://"):]
-    if value.startswith("https://"):
-        return value
-    if value.startswith("/"):
-        return "https://www.law.go.kr" + value
-    return "https://www.law.go.kr/" + value
-
-
-def load_state() -> Dict:
-    if not STATE_PATH.exists():
-        return {}
-    try:
-        data = json.loads(STATE_PATH.read_text(encoding="utf-8"))
-        return data if isinstance(data, dict) else {}
-    except Exception:
-        return {}
-
-
-def save_state(state: Dict) -> None:
-    STATE_PATH.write_text(
-        json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+def public_law_link(record: Dict) -> str:
+    law_name = clean(record.get("law_name"))
+    if law_name:
+        return f"https://www.law.go.kr/법령/{quote(law_name)}"
+    return "https://www.law.go.kr"
 
 
 def walk_dicts(value):
@@ -131,7 +107,6 @@ def fetch_versions(session: requests.Session, law_name: str, oc: str) -> List[Di
                 "promulgation_no": promulgation_no,
                 "enforcement_date": date_digits(enforcement_date),
                 "revision_type": clean(item.get("제개정구분명")),
-                "detail_link": law_link(item.get("법령상세링크")),
             }
         )
 
@@ -140,6 +115,17 @@ def fetch_versions(session: requests.Session, law_name: str, oc: str) -> List[Di
         key = f"{row['promulgation_date']}:{row['promulgation_no']}"
         unique[key] = row
     return sorted(unique.values(), key=lambda x: (x["promulgation_date"], x["promulgation_no"]), reverse=True)
+
+
+def verify_promulgation(session, oc: str, law_name: str, post: Dict) -> Dict:
+    target_date = date_digits(post.get("promulgation_date"))
+    target_no = re.sub(r"\D", "", clean(post.get("promulgation_no")))
+    for record in fetch_versions(session, law_name, oc):
+        record_no = re.sub(r"\D", "", clean(record.get("promulgation_no")))
+        if record.get("promulgation_date") == target_date and record_no == target_no:
+            record["detail_link"] = public_law_link(record)
+            return record
+    return {}
 
 
 def keyword_for(law_name: str) -> str:
@@ -166,7 +152,7 @@ def build_promulgation_html(record: Dict, test_mode: bool = False) -> str:
           <b>시행일</b> · {fmt_date(record.get('enforcement_date'))}<br>
           <b>법률번호</b> · 제{html.escape(clean(record.get('promulgation_no')))}호
         </div>
-        <div style="margin-top:18px;"><a href="{html.escape(law_link(record.get('detail_link')), quote=True)}" style="color:#1a73e8;text-decoration:none;font-weight:600;">국가법령정보센터 보기 →</a></div>
+        <div style="margin-top:18px;"><a href="{html.escape(public_law_link(record), quote=True)}" style="color:#1a73e8;text-decoration:none;font-weight:600;">국가법령정보센터 보기 →</a></div>
       </div></div>
     </body></html>
     """
@@ -184,7 +170,7 @@ def build_enforcement_html(record: Dict, test_mode: bool = False, today: str = "
         <div style="font-size:22px;font-weight:700;margin-top:6px;">✅ {html.escape(display_title(record))}</div>
         <div style="margin-top:18px;font-size:16px;font-weight:700;">{sentence}</div>
         <div style="margin-top:10px;line-height:1.9;color:#374151;"><b>시행일</b> · {fmt_date(enforcement)}</div>
-        <div style="margin-top:18px;"><a href="{html.escape(law_link(record.get('detail_link')), quote=True)}" style="color:#1a73e8;text-decoration:none;font-weight:600;">국가법령정보센터 보기 →</a></div>
+        <div style="margin-top:18px;"><a href="{html.escape(public_law_link(record), quote=True)}" style="color:#1a73e8;text-decoration:none;font-weight:600;">국가법령정보센터 보기 →</a></div>
       </div></div>
     </body></html>
     """
@@ -214,7 +200,7 @@ def send_promulgation(record: Dict, test_mode: bool = False) -> None:
         f"• 공포일: {fmt_date(record.get('promulgation_date'))}\n"
         f"• 시행일: {fmt_date(record.get('enforcement_date'))}\n"
         f"• 법률번호: 제{html.escape(clean(record.get('promulgation_no')))}호\n\n"
-        f'<a href="{html.escape(law_link(record.get("detail_link")), quote=True)}">국가법령정보센터 →</a>'
+        f'<a href="{html.escape(public_law_link(record), quote=True)}">국가법령정보센터 →</a>'
     )
     telegram_send(text)
 
@@ -231,7 +217,7 @@ def send_enforcement(record: Dict, test_mode: bool = False, today: str = "") -> 
         f"<b>{html.escape(display_title(record))}</b>\n\n"
         f"{sentence}\n"
         f"• 시행일: {fmt_date(enforcement)}\n\n"
-        f'<a href="{html.escape(law_link(record.get("detail_link")), quote=True)}">국가법령정보센터 →</a>'
+        f'<a href="{html.escape(public_law_link(record), quote=True)}">국가법령정보센터 →</a>'
     )
     telegram_send(text)
 
@@ -242,54 +228,78 @@ def main() -> int:
         print("[WARN] LAW_API_OC Secret이 없어 공포·시행 자동추적을 건너뜁니다.")
         return 0
 
+    seen = monitor.load_seen()
+    if not seen:
+        print("[INFO] 추적 중인 의안이 없어 공포·시행 조회를 건너뜁니다.")
+        return 0
+
     today = datetime.now(monitor.KST).strftime("%Y%m%d")
-    state = load_state()
-    first_run = not bool(state)
     now = datetime.now(monitor.KST).isoformat(timespec="seconds")
     session = requests.Session()
     session.headers.update(monitor.HEADERS)
 
     try:
-        for law_name in monitor.WATCH_LAWS:
-            versions = fetch_versions(session, law_name, oc)
-            if not versions:
-                print(f"[WARN] 법제처 검색결과 없음: {law_name}")
+        for bill_id, entry in seen.items():
+            if entry.get("status_tracking") is False:
+                print(f"[INFO] 공포·시행 추적 제외: {entry.get('bill_no') or bill_id}")
                 continue
 
-            law_state = state.setdefault(law_name, {})
-            records = law_state.setdefault("records", {})
+            initializing = not bool(entry.get("post_plenary_master_initialized_at"))
+            try:
+                post = fetch_post_plenary_status(entry, session=session)
+            except Exception as exc:
+                print(f"[WARN] 공포정보 조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
+                continue
 
-            for record in versions:
-                key = f"{record['promulgation_date']}:{record['promulgation_no']}"
-                existing = records.get(key)
-                if existing is None:
-                    existing = {
-                        **record,
-                        "first_seen_at": now,
-                        "promulgation_sent": first_run,
-                        "enforcement_sent": bool(record.get("enforcement_date") and record["enforcement_date"] < today),
-                    }
-                    records[key] = existing
-                    if not first_run:
-                        send_promulgation(existing)
-                        existing["promulgation_sent"] = True
-                        existing["promulgation_sent_at"] = now
-                        print(f"[INFO] 공포 알림 발송: {law_name} / 제{record['promulgation_no']}호")
-                else:
-                    existing.update({k: v for k, v in record.items() if v})
+            entry["post_plenary_master_initialized_at"] = entry.get("post_plenary_master_initialized_at") or now
+            if not post.get("promulgation_date") or not post.get("promulgation_no"):
+                continue
 
-                enforcement_date = clean(existing.get("enforcement_date"))
-                if enforcement_date and enforcement_date <= today and not existing.get("enforcement_sent"):
-                    send_enforcement(existing, today=today)
-                    existing["enforcement_sent"] = True
-                    existing["enforcement_sent_at"] = now
-                    print(f"[INFO] 시행 알림 발송: {law_name} / {fmt_date(enforcement_date)}")
+            law_name = clean(entry.get("matched_law"))
+            verified = verify_promulgation(session, oc, law_name, post)
+            if not verified:
+                print(
+                    f"[WARN] 법제처 검증 대기: {entry.get('bill_no')} / "
+                    f"공포 {post.get('promulgation_date')} 제{post.get('promulgation_no')}호"
+                )
+                continue
 
-            law_state["last_checked_at"] = now
+            current = entry.get("promulgation") if isinstance(entry.get("promulgation"), dict) else {}
+            same_publication = (
+                clean(current.get("promulgation_date")) == clean(verified.get("promulgation_date"))
+                and re.sub(r"\D", "", clean(current.get("promulgation_no")))
+                == re.sub(r"\D", "", clean(verified.get("promulgation_no")))
+            )
 
-        save_state(state)
-        if first_run:
-            print("[INFO] 공포·시행 최초 실행: 기존 공포 이력은 기준 데이터로 저장하고 과거 공포 메일은 발송하지 않습니다.")
+            if not same_publication:
+                baseline_only = initializing and entry.get("late_stage_discovered_event") != "공포"
+                current = {
+                    **verified,
+                    "verified_at": now,
+                    "promulgation_sent": baseline_only,
+                    "enforcement_sent": bool(
+                        verified.get("enforcement_date") and verified["enforcement_date"] < today
+                    ),
+                }
+                entry["promulgation"] = current
+                if baseline_only:
+                    print(f"[INFO] 기존 공포정보 기준 저장: {entry.get('bill_no')} / 제{verified.get('promulgation_no')}호")
+
+            if not current.get("promulgation_sent"):
+                send_promulgation(current)
+                current["promulgation_sent"] = True
+                current["promulgation_sent_at"] = now
+                entry.pop("late_stage_discovered_event", None)
+                print(f"[INFO] 공포 알림 발송: {entry.get('bill_no')} / 제{current.get('promulgation_no')}호")
+
+            enforcement_date = clean(current.get("enforcement_date"))
+            if enforcement_date and enforcement_date <= today and not current.get("enforcement_sent"):
+                send_enforcement(current, today=today)
+                current["enforcement_sent"] = True
+                current["enforcement_sent_at"] = now
+                print(f"[INFO] 시행 알림 발송: {entry.get('bill_no')} / {fmt_date(enforcement_date)}")
+
+        monitor.save_seen(seen)
         return 0
     finally:
         session.close()
