@@ -60,14 +60,24 @@ jobs:
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
         run: python telegram_status_runner.py
 
+      - name: Run promulgation and enforcement monitor
+        env:
+          LAW_API_OC: ${{ secrets.LAW_API_OC }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python law_effective_monitor.py
+
       - name: Commit updated state
         run: |
-          if git diff --quiet -- seen_bills.json; then
+          if [ -z "$(git status --porcelain -- seen_bills.json law_effective_state.json)" ]; then
             echo "No state changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- seen_bills.json
-          git commit -m "Update seen bills state"
+          git add -- seen_bills.json law_effective_state.json
+          git commit -m "Update law monitoring state"
           git push
