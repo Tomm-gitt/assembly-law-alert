@@ -1,0 +1,78 @@
+name: Test Promulgation Enforcement Alert
+
+on:
+  workflow_dispatch:
+    inputs:
+      alert_type:
+        description: '테스트 종류'
+        required: true
+        type: choice
+        options:
+          - 공포
+          - 시행
+      law_name:
+        description: '법률명'
+        required: true
+        default: '전자상거래 등에서의 소비자보호에 관한 법률'
+        type: string
+      promulgation_date:
+        description: '공포일 (YYYY-MM-DD)'
+        required: true
+        default: '2026-09-15'
+        type: string
+      enforcement_date:
+        description: '시행일 (YYYY-MM-DD)'
+        required: true
+        default: '2027-03-15'
+        type: string
+      promulgation_no:
+        description: '법률번호 숫자만 (예: 21234)'
+        required: true
+        default: '21234'
+        type: string
+      revision_type:
+        description: '제개정구분'
+        required: true
+        default: '일부개정'
+        type: choice
+        options:
+          - 일부개정
+          - 전부개정
+          - 제정
+      detail_link:
+        description: '국가법령정보센터 링크 (테스트용, 비워도 됨)'
+        required: false
+        default: 'https://www.law.go.kr'
+        type: string
+
+jobs:
+  test-alert:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send test email and Telegram
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_ALERT_TYPE: ${{ inputs.alert_type }}
+          TEST_LAW_NAME: ${{ inputs.law_name }}
+          TEST_PROMULGATION_DATE: ${{ inputs.promulgation_date }}
+          TEST_ENFORCEMENT_DATE: ${{ inputs.enforcement_date }}
+          TEST_PROMULGATION_NO: ${{ inputs.promulgation_no }}
+          TEST_REVISION_TYPE: ${{ inputs.revision_type }}
+          TEST_DETAIL_LINK: ${{ inputs.detail_link }}
+        run: python test_law_effective_alert.py
