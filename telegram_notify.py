@@ -15,33 +15,56 @@ def _esc(value) -> str:
 
 def _telegram_config():
     token = _clean(os.getenv("TELEGRAM_BOT_TOKEN"))
-    chat_id = _clean(os.getenv("TELEGRAM_CHAT_ID"))
-    if not token or not chat_id:
+    raw_chat_ids = _clean(os.getenv("TELEGRAM_CHAT_ID"))
+
+    chat_ids = []
+    for chat_id in raw_chat_ids.split(","):
+        chat_id = _clean(chat_id)
+        if chat_id and chat_id not in chat_ids:
+            chat_ids.append(chat_id)
+
+    if not token or not chat_ids:
         print("[WARN] Telegram Secret이 없어 텔레그램 발송을 건너뜁니다.")
-        return None, None
-    return token, chat_id
+        return None, []
+    return token, chat_ids
 
 
 def _send(text: str) -> None:
-    token, chat_id = _telegram_config()
-    if not token or not chat_id:
+    token, chat_ids = _telegram_config()
+    if not token or not chat_ids:
         return
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    response = requests.post(
-        url,
-        json={
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "HTML",
-            "disable_web_page_preview": True,
-        },
-        timeout=30,
-    )
-    response.raise_for_status()
-    data = response.json()
-    if not data.get("ok"):
-        raise RuntimeError(f"Telegram API 오류: {data}")
+    failed = []
+    success_count = 0
+
+    for chat_id in chat_ids:
+        try:
+            response = requests.post(
+                url,
+                json={
+                    "chat_id": chat_id,
+                    "text": text,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True,
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+            if not data.get("ok"):
+                raise RuntimeError(f"Telegram API 오류: {data}")
+            success_count += 1
+        except Exception as exc:
+            failed.append((chat_id, str(exc)))
+            print(f"[WARN] Telegram 발송 실패 chat_id={chat_id}: {exc}")
+
+    if success_count:
+        print(f"[INFO] Telegram {success_count}개 채팅방 발송 완료")
+
+    if failed and success_count == 0:
+        failed_ids = ", ".join(chat_id for chat_id, _ in failed)
+        raise RuntimeError(f"Telegram 전체 채팅방 발송 실패: {failed_ids}")
 
 
 def _trim(text: str, limit: int) -> str:
