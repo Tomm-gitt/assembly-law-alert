@@ -83,6 +83,35 @@ def _extract_relevant_segment(page_text: str) -> str:
     return clean_inline(segment)
 
 
+def _find_combined_section_pivot(text: str):
+    """Find the real transition from background/reason to the amendment itself.
+
+    Combined '제안이유 및 주요내용' text often contains ordinary phrases such as
+    '이에 필요한 정보를...' inside the background. Treating the first '이에' as the
+    boundary truncates the proposal reason. Prefer explicit amendment-transition
+    phrases and only use a conservative generic fallback.
+    """
+    preferred_patterns = [
+        r"(?:^|\n|\s)(이에\s+(?:따라\s+)?(?:본\s*)?(?:개정안|법률안)(?:은|에서는|으로|을|를)?\s*)",
+        r"(?:^|\n|\s)(따라서\s+(?:본\s*)?(?:개정안|법률안)(?:은|에서는|으로|을|를)?\s*)",
+    ]
+    for pattern in preferred_patterns:
+        match = re.search(pattern, text)
+        if match and match.start() > 40:
+            return match
+
+    # Fallback: only accept a generic '이에' when it directly introduces a
+    # legislative action, not ordinary noun phrases such as '이에 필요한'.
+    generic = re.search(
+        r"(?:^|\n|\s)(이에(?:\s+따라)?\s+(?=(?:현행법|법|제\d+조|규정|근거|제도|절차|권한|의무|과태료|벌칙).{0,80}(?:개정|신설|삭제|마련|규정|부과|강화|개선)))",
+        text,
+        flags=re.S,
+    )
+    if generic and generic.start() > 40:
+        return generic
+    return None
+
+
 def _split_reason_main(segment: str) -> Dict[str, str]:
     if not segment:
         return {"proposal_reason": "", "main_content": ""}
@@ -107,9 +136,10 @@ def _split_reason_main(segment: str) -> Dict[str, str]:
         return {"proposal_reason": reason, "main_content": main}
 
     # 국민참여입법센터는 두 항목을 한 본문으로 제공하는 경우가 많다.
-    # 대부분 문제/현황 설명 뒤 "이에 ..."로 실제 개정내용이 시작된다.
-    pivot = re.search(r"(?:^|\n|\s)(이에(?:\s+따라)?\s+)", text)
-    if pivot and pivot.start() > 40:
+    # 문제/현황 설명 속의 일반적인 '이에 필요한...' 등을 경계로 오인하지 않고,
+    # '이에 개정안은...'처럼 실제 개정행위가 시작되는 지점을 우선 사용한다.
+    pivot = _find_combined_section_pivot(text)
+    if pivot:
         reason = clean_inline(text[: pivot.start()])
         main = clean_inline(text[pivot.start():])
         return {"proposal_reason": reason, "main_content": main}
