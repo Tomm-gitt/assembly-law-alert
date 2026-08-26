@@ -1,0 +1,37 @@
+name: Test Historical Bill Lifecycle Real Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      bill_no:
+        description: '완료된 과거 의안번호'
+        required: true
+        default: '2216767'
+        type: string
+
+jobs:
+  test-realdata-lifecycle:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run historical real-data lifecycle test
+        env:
+          TEST_BILL_NO: ${{ inputs.bill_no }}
+          LAW_API_OC: ${{ secrets.LAW_API_OC }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python historical_lifecycle_realdata_test.py
