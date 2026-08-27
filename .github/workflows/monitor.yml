@@ -2,8 +2,14 @@ name: National Assembly Law Monitor
 
 on:
   schedule:
-    # 06:30 KST = 21:30 UTC (previous day)
-    - cron: '30 21 * * *'
+    # GitHub scheduled workflows can start late under load, so run several staggered backups
+    # before the 08:30 KST reporting deadline. Times below are KST on the same morning.
+    - cron: '17 20 * * *'  # 05:17 KST
+    - cron: '47 20 * * *'  # 05:47 KST
+    - cron: '17 21 * * *'  # 06:17 KST
+    - cron: '47 21 * * *'  # 06:47 KST
+    - cron: '17 22 * * *'  # 07:17 KST
+    - cron: '47 22 * * *'  # 07:47 KST
   workflow_dispatch:
     inputs:
       force_send_recent:
@@ -17,6 +23,12 @@ on:
         default: false
         type: boolean
 
+# Prevent overlapping scheduled/manual runs from racing on seen_bills.json.
+# Queued runs are allowed to finish in order rather than cancelling an in-progress monitor.
+concurrency:
+  group: assembly-law-monitor-production
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -26,6 +38,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      - name: Log trigger timing
+        run: |
+          echo "event=${{ github.event_name }}"
+          echo "scheduled_cron=${{ github.event.schedule }}"
+          echo "started_utc=$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          TZ=Asia/Seoul date '+started_kst=%Y-%m-%d %H:%M:%S %Z'
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
