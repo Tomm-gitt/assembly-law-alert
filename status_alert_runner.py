@@ -4,6 +4,11 @@ from datetime import datetime
 import requests
 
 import status_monitor
+from alternative_successor import (
+    find_successor_bill,
+    is_alternative_reflection_result,
+    register_successor,
+)
 from post_plenary import fetch_post_plenary_status
 
 # 실제 알림은 핵심 단계만 사용한다.
@@ -40,13 +45,34 @@ def build_mail_html_filtered(alerts):
     html = _original_build_mail_html(alerts)
     return html.replace(
         "소관위원회 회부·상정·처리, 법제사법위원회 진행, 본회의 처리 등 의미 있는 단계가 새로 확인될 때만 발송합니다.",
-        "소관위원회 회부, 법제사법위원회 회부, 본회의 처리, 정부이송의 핵심 단계가 새로 확인될 때만 발송합니다.",
+        "소관위원회 회부, 대안반영폐기·위원회 대안 승계, 법제사법위원회 회부, 본회의 처리, 정부이송의 핵심 단계가 새로 확인될 때만 발송합니다.",
     )
 
 
 status_monitor.fetch_lifecycle = fetch_lifecycle_with_transfer
 status_monitor.highest_stage = highest_stage_with_transfer
 status_monitor.build_mail_html = build_mail_html_filtered
+
+
+def _alternative_reflected(current_raw):
+    return (
+        is_alternative_reflection_result(current_raw.get("committee_process_result"))
+        or is_alternative_reflection_result(current_raw.get("plenary_result"))
+    )
+
+
+def _first_successor_changes(current):
+    """자동승계 의안의 첫 조회에서 이미 발생한 후속 핵심단계를 놓치지 않는다."""
+    changes = []
+    for field, label in [
+        ("law_submit_date", "법제사법위원회 회부"),
+        ("plenary_date", "본회의 처리"),
+        ("government_transfer_date", "정부이송"),
+    ]:
+        value = status_monitor.clean(current.get(field))
+        if value:
+            changes.append({"field": field, "label": label, "old": "", "new": value})
+    return changes
 
 
 def main() -> int:
@@ -62,7 +88,8 @@ def main() -> int:
     alerts = []
 
     try:
-        for bill_id, entry in seen.items():
+        # 실행 중 위원회 대안이 새로 seen에 추가될 수 있으므로 시작 시점 목록만 순회한다.
+        for bill_id, entry in list(seen.items()):
             if entry.get("status_tracking") is False:
                 print(f"[INFO] 상태추적 제외: {entry.get('bill_no') or bill_id}")
                 continue
@@ -76,6 +103,55 @@ def main() -> int:
             current = status_monitor.merge_snapshot(previous, current_raw)
             changes = status_monitor.detect_changes(previous, current) if previous else []
 
+            # 대안반영폐기 감지 → 동일 법률의 위원회 대안을 찾아 자동승계한다.
+            # status_tracking=true인 원 의안만 이 경로에 들어오므로 제외된 의안은 승계하지 않는다.
+            if _alternative_reflected(current_raw) and not entry.get("alternative_reflection"):
+                try:
+                    successor = find_successor_bill(session, entry, current_raw)
+                except Exception as exc:
+                    successor = None
+                    print(f"[WARN] 위원회 대안 탐색 실패: {entry.get('bill_no') or bill_id} / {exc}")
+
+                if successor:
+                    successor_entry = register_successor(seen, bill_id, entry, successor, now)
+                    successor_no = successor_entry.get("bill_no") or successor.get("bill_no")
+                    successor_name = successor_entry.get("bill_name") or successor.get("bill_name")
+                    changes.append({
+                        "field": "alternative_successor",
+                        "label": "대안반영폐기 → 위원회 대안 자동승계",
+                        "old": "",
+                        "new": f"의안번호 {successor_no} · {successor_name}",
+                    })
+                    print(
+                        f"[INFO] 위원회 대안 자동승계: {entry.get('bill_no')} → "
+                        f"{successor_no} / {successor_name}"
+                    )
+                else:
+                    entry["alternative_successor_pending"] = True
+                    entry["alternative_successor_last_checked_at"] = now
+                    print(f"[WARN] 대안반영폐기 감지했으나 후속 대안 미확정: {entry.get('bill_no')}")
+
+            # 이전 실행에서 대안이 아직 확인되지 않았다면 매일 다시 탐색한다.
+            elif entry.get("alternative_successor_pending") and not entry.get("alternative_reflection"):
+                try:
+                    successor = find_successor_bill(session, entry, current_raw)
+                except Exception as exc:
+                    successor = None
+                    print(f"[WARN] 위원회 대안 재탐색 실패: {entry.get('bill_no') or bill_id} / {exc}")
+                entry["alternative_successor_last_checked_at"] = now
+                if successor:
+                    successor_entry = register_successor(seen, bill_id, entry, successor, now)
+                    entry.pop("alternative_successor_pending", None)
+                    successor_no = successor_entry.get("bill_no") or successor.get("bill_no")
+                    successor_name = successor_entry.get("bill_name") or successor.get("bill_name")
+                    changes.append({
+                        "field": "alternative_successor",
+                        "label": "위원회 대안 자동승계",
+                        "old": "대안 연결 대기",
+                        "new": f"의안번호 {successor_no} · {successor_name}",
+                    })
+                    print(f"[INFO] 위원회 대안 재탐색 성공: {entry.get('bill_no')} → {successor_no}")
+
             # 과거 의안이 앞으로 정부이송 단계에서 처음 발견된 경우 그 이벤트만 1회 알림한다.
             if not previous and entry.get("late_stage_discovered_event") == "정부이송":
                 transfer_date = current.get("government_transfer_date")
@@ -85,7 +161,12 @@ def main() -> int:
                         "label": "정부이송",
                         "old": "",
                         "new": transfer_date,
-                    }]
+                    }] + [c for c in changes if c.get("field") == "alternative_successor"]
+
+            # 자동승계된 위원회 대안은 첫 조회에서도 이미 진행된 후속 핵심단계를 알린다.
+            if not previous and entry.get("successor_tracking_started_at"):
+                changes = _first_successor_changes(current) + changes
+                entry.pop("successor_tracking_started_at", None)
 
             entry["lifecycle"] = current
             entry["last_status_checked_at"] = now
@@ -99,7 +180,11 @@ def main() -> int:
                         "bill_id": bill_id,
                         "committee": current.get("committee"),
                         "detail_link": current.get("detail_link"),
-                        "stage": status_monitor.highest_stage(current),
+                        "stage": (
+                            "위원회 대안 자동승계"
+                            if any(c.get("field") == "alternative_successor" for c in changes)
+                            else status_monitor.highest_stage(current)
+                        ),
                         "changes": changes,
                     }
                 )
