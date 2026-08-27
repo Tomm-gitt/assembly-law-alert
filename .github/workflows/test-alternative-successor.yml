@@ -1,4 +1,4 @@
-name: Test Alternative Successor Tracking
+name: "[테스트] 대안승계 후보탐색"
 
 on:
   workflow_dispatch:
