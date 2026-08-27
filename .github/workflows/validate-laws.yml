@@ -1,4 +1,4 @@
-name: Validate 15 Law Matches
+name: "[검증] 관리대상 법률 15종 확인"
 
 on:
   workflow_dispatch:
