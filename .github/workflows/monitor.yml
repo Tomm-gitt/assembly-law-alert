@@ -1,4 +1,4 @@
-name: National Assembly Law Monitor
+name: "[운영] 국회 법률안 자동모니터링"
 
 on:
   schedule:
@@ -23,8 +23,6 @@ on:
         default: false
         type: boolean
 
-# Prevent overlapping scheduled/manual runs from racing on seen_bills.json.
-# Queued runs are allowed to finish in order rather than cancelling an in-progress monitor.
 concurrency:
   group: assembly-law-monitor-production
   cancel-in-progress: false
@@ -34,7 +32,6 @@ permissions:
 
 jobs:
   monitor:
-    # Ubuntu/Windows GitHub-hosted runners에서 국회 API 연결이 timeout되어 macOS 사용
     runs-on: macos-latest
 
     steps:
