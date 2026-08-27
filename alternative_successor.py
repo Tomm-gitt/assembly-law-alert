@@ -1,8 +1,10 @@
 import re
 from datetime import date, timedelta
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import urljoin
 
 import requests
+from bs4 import BeautifulSoup
 
 import monitor
 
@@ -11,6 +13,8 @@ SEARCH_WINDOW_DAYS_BEFORE = 7
 SEARCH_WINDOW_DAYS_AFTER = 120
 RECEIPT_PAGE_SIZE = 100
 MAX_RECEIPT_PAGES = 100
+MAX_OFFICIAL_LIST_PAGES = 30
+OFFICIAL_LIST_URL = "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out"
 
 
 def clean(value) -> str:
@@ -103,10 +107,6 @@ def _collect_receipt_candidates(
             if key:
                 candidates[key] = candidate
 
-        # BILLRCP는 요청 pSize를 그대로 보장하지 않을 수 있으므로
-        # len(rows) < requested pSize 만으로 마지막 페이지라고 판단하지 않는다.
-        # 정렬이 최신순인 일반 응답에서는 검색시작일보다 오래된 페이지가
-        # 연속 3회 나오면 충분히 과거로 내려온 것으로 보고 종료한다.
         if page_dates and max(page_dates) < start:
             older_pages_in_a_row += 1
         else:
@@ -117,13 +117,149 @@ def _collect_receipt_candidates(
     return list(candidates.values())
 
 
+def _extract_official_detail_candidate(
+    session: requests.Session,
+    detail_url: str,
+    bill_no: str,
+    watched_law: str,
+    start: date,
+    end: date,
+) -> Optional[Dict]:
+    response = session.get(detail_url, timeout=30)
+    response.raise_for_status()
+    response.encoding = response.apparent_encoding or response.encoding or "utf-8"
+    soup = BeautifulSoup(response.text, "html.parser")
+    text = " ".join(soup.stripped_strings)
+
+    title = ""
+    for tag in soup.find_all(["h1", "h2", "h3", "h4"]):
+        value = clean(tag.get_text(" ", strip=True))
+        if "법률안" in value:
+            title = value
+            break
+    if not title:
+        match = re.search(rf"({re.escape(watched_law)}[^\n]{{0,120}}?법률안(?:\(대안\))?)", text)
+        if match:
+            title = clean(match.group(1))
+
+    if not title or monitor.match_watched_law(title) != watched_law:
+        return None
+    if "대안" not in title:
+        return None
+
+    info_match = re.search(
+        rf"([^|\n]{{0,50}}위원장)\s*,?\s*제\s*{re.escape(bill_no)}\s*호\s*\(\s*(\d{{4}})\s*[.년]\s*(\d{{1,2}})\s*[.월]\s*(\d{{1,2}})",
+        text,
+    )
+    if info_match:
+        proposer = clean(info_match.group(1))
+        proposal_date = date(int(info_match.group(2)), int(info_match.group(3)), int(info_match.group(4)))
+    else:
+        date_match = re.search(
+            rf"제\s*{re.escape(bill_no)}\s*호\s*\(\s*(\d{{4}})\s*[.년]\s*(\d{{1,2}})\s*[.월]\s*(\d{{1,2}})",
+            text,
+        )
+        if not date_match:
+            return None
+        proposal_date = date(int(date_match.group(1)), int(date_match.group(2)), int(date_match.group(3)))
+        proposer_match = re.search(r"([가-힣A-Za-z·ㆍ\s]{2,40}위원장)", text)
+        proposer = clean(proposer_match.group(1)) if proposer_match else "위원회"
+
+    if not (start <= proposal_date <= end):
+        return None
+    if "위원장" not in proposer and "위원" not in proposer:
+        return None
+
+    return {
+        "bill_id": "",
+        "bill_no": bill_no,
+        "bill_name": title,
+        "proposal_date": proposal_date.isoformat(),
+        "proposer_kind": proposer,
+        "process_result": "",
+        "detail_link": detail_url,
+        "source": "opinion.lawmaking.go.kr",
+    }
+
+
+def _collect_official_lawmaking_candidates(
+    session: requests.Session,
+    watched_law: str,
+    start: date,
+    end: date,
+) -> List[Dict]:
+    """Search the official National Assembly-linked lawmaking list, then verify each candidate detail page."""
+    candidates: Dict[str, Dict] = {}
+    seen_detail_urls = set()
+    empty_pages = 0
+
+    for page in range(1, MAX_OFFICIAL_LIST_PAGES + 1):
+        params = {
+            "sugCd": monitor.AGE,
+            "endSugCd": monitor.AGE,
+            "scBlNm": "scBlNm_blNm",
+            "scBlNmSct": watched_law,
+            "pageIndex": str(page),
+        }
+        response = session.get(OFFICIAL_LIST_URL, params=params, timeout=30)
+        response.raise_for_status()
+        response.encoding = response.apparent_encoding or response.encoding or "utf-8"
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        page_links = []
+        for anchor in soup.find_all("a", href=True):
+            href = clean(anchor.get("href"))
+            match = re.search(r"/gcom/nsmLmSts/out/(\d+)/detailRP", href)
+            if not match:
+                continue
+            bill_no = match.group(1)
+            detail_url = urljoin(response.url, href)
+            if detail_url in seen_detail_urls:
+                continue
+            seen_detail_urls.add(detail_url)
+            page_links.append((bill_no, detail_url))
+
+        if not page_links:
+            empty_pages += 1
+            if empty_pages >= 2:
+                break
+            continue
+        empty_pages = 0
+
+        for bill_no, detail_url in page_links:
+            try:
+                candidate = _extract_official_detail_candidate(
+                    session,
+                    detail_url,
+                    bill_no,
+                    watched_law,
+                    start,
+                    end,
+                )
+            except Exception as exc:
+                print(f"[WARN] 공식 입법현황 후보 상세조회 실패: {bill_no} / {exc}")
+                continue
+            if candidate:
+                candidates[bill_no] = candidate
+
+    return list(candidates.values())
+
+
 def fetch_candidate_alternatives(session: requests.Session, watched_law: str, anchor_date: date) -> List[Dict]:
     start = anchor_date - timedelta(days=SEARCH_WINDOW_DAYS_BEFORE)
     end = anchor_date + timedelta(days=SEARCH_WINDOW_DAYS_AFTER)
 
-    # 1차: 법률명 필터를 함께 보내 API가 지원하면 검색범위를 크게 줄인다.
-    # 일부 환경에서 필터가 무시되거나 부분검색을 지원하지 않을 수 있으므로
-    # 결과가 없으면 2차로 전체 접수목록을 페이지 단위로 충분히 탐색한다.
+    # 1순위: 국민참여입법센터의 공식 국회입법현황 목록/상세에서 위원회 대안을 찾는다.
+    official = _collect_official_lawmaking_candidates(session, watched_law, start, end)
+    if official:
+        print(
+            f"[INFO] 공식 국회입법현황에서 대안 후보 발견: {watched_law} / "
+            f"{[c.get('bill_no') for c in official]}"
+        )
+        return official
+
+    # 2순위: 공식 목록 탐색 실패 시 BILLRCP를 보조 후보원으로 사용한다.
+    print(f"[WARN] 공식 국회입법현황 후보 없음. BILLRCP 보조탐색: {watched_law}")
     candidates = _collect_receipt_candidates(
         session,
         watched_law,
@@ -134,9 +270,7 @@ def fetch_candidate_alternatives(session: requests.Session, watched_law: str, an
     if candidates:
         return candidates
 
-    print(
-        f"[INFO] BILLRCP 법률명 필터 후보 없음. 전체 접수목록으로 재탐색: {watched_law}"
-    )
+    print(f"[INFO] BILLRCP 법률명 필터 후보 없음. 전체 접수목록으로 재탐색: {watched_law}")
     return _collect_receipt_candidates(session, watched_law, start, end)
 
 
