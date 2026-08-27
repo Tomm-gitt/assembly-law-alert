@@ -1,0 +1,47 @@
+name: Test Official Successor Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      original_bill_no:
+        description: '대안반영폐기 원의안번호'
+        required: true
+        default: '2210213'
+        type: string
+      expected_successor_no:
+        description: '회귀검증용 기대 대안번호'
+        required: true
+        default: '2216767'
+        type: string
+      law_name:
+        description: '관리 법률명'
+        required: true
+        default: '소비자기본법'
+        type: string
+
+jobs:
+  dry-run-official-evidence:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify official successor evidence without changing state
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+          TEST_ORIGINAL_BILL_NO: ${{ inputs.original_bill_no }}
+          TEST_EXPECTED_SUCCESSOR_NO: ${{ inputs.expected_successor_no }}
+          TEST_LAW_NAME: ${{ inputs.law_name }}
+        run: python official_successor_evidence_test.py
+
+      - name: Prove production state unchanged
+        run: git diff --exit-code -- seen_bills.json
