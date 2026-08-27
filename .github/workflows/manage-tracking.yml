@@ -1,4 +1,4 @@
-name: Manage Bill Status Tracking
+name: "[운영] 의안 상태추적 제외·재개"
 
 on:
   workflow_dispatch:
