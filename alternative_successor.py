@@ -9,7 +9,8 @@ import monitor
 
 SEARCH_WINDOW_DAYS_BEFORE = 7
 SEARCH_WINDOW_DAYS_AFTER = 120
-MAX_RECEIPT_PAGES = 10
+RECEIPT_PAGE_SIZE = 100
+MAX_RECEIPT_PAGES = 100
 
 
 def clean(value) -> str:
@@ -37,7 +38,6 @@ def _is_committee_alternative_bill(row: Dict, watched_law: str) -> bool:
         return False
 
     proposer_kind = clean(row.get("PPSR_KIND"))
-    # 동일 법률의 일반 의원안과 혼동하지 않도록 '대안' 제목 또는 위원회 제안만 허용한다.
     if "(대안)" not in bill_name and "대안" not in bill_name:
         if "위원" not in proposer_kind:
             return False
@@ -49,19 +49,41 @@ def _date_rank(value: str, anchor: date) -> Tuple[int, int]:
     if not parsed:
         return (2, 9999)
     delta = (parsed - anchor).days
-    # 대안반영폐기 이후에 제안된 대안을 최우선. 며칠 먼저 접수된 경우만 차선으로 허용한다.
     if delta >= 0:
         return (0, delta)
     return (1, abs(delta))
 
 
-def fetch_candidate_alternatives(session: requests.Session, watched_law: str, anchor_date: date) -> List[Dict]:
-    start = anchor_date - timedelta(days=SEARCH_WINDOW_DAYS_BEFORE)
-    end = anchor_date + timedelta(days=SEARCH_WINDOW_DAYS_AFTER)
-    candidates: List[Dict] = []
+def _candidate_from_row(row: Dict) -> Dict:
+    return {
+        "bill_id": clean(row.get("BILL_ID")),
+        "bill_no": clean(row.get("BILL_NO")),
+        "bill_name": clean(row.get("BILL_NM")),
+        "proposal_date": clean(row.get("PPSL_DT")),
+        "proposer_kind": clean(row.get("PPSR_KIND")) or "위원회",
+        "process_result": clean(row.get("PROC_RSLT")),
+        "detail_link": clean(row.get("LINK_URL")),
+        "source": monitor.RECEIPT_API,
+    }
+
+
+def _collect_receipt_candidates(
+    session: requests.Session,
+    watched_law: str,
+    start: date,
+    end: date,
+    extra_params: Optional[Dict[str, str]] = None,
+) -> List[Dict]:
+    candidates: Dict[str, Dict] = {}
+    older_pages_in_a_row = 0
 
     for page in range(1, MAX_RECEIPT_PAGES + 1):
-        data = monitor.request_api(session, monitor.RECEIPT_API, {"pIndex": str(page), "pSize": str(monitor.PAGE_SIZE)})
+        params = {
+            "pIndex": str(page),
+            "pSize": str(RECEIPT_PAGE_SIZE),
+            **(extra_params or {}),
+        }
+        data = monitor.request_api(session, monitor.RECEIPT_API, params)
         rows = monitor.parse_rows(data, monitor.RECEIPT_API)
         if not rows:
             break
@@ -75,23 +97,47 @@ def fetch_candidate_alternatives(session: requests.Session, watched_law: str, an
                 continue
             if not _is_committee_alternative_bill(row, watched_law):
                 continue
-            candidates.append({
-                "bill_id": clean(row.get("BILL_ID")),
-                "bill_no": clean(row.get("BILL_NO")),
-                "bill_name": clean(row.get("BILL_NM")),
-                "proposal_date": clean(row.get("PPSL_DT")),
-                "proposer_kind": clean(row.get("PPSR_KIND")) or "위원회",
-                "process_result": clean(row.get("PROC_RSLT")),
-                "detail_link": clean(row.get("LINK_URL")),
-                "source": monitor.RECEIPT_API,
-            })
 
+            candidate = _candidate_from_row(row)
+            key = candidate.get("bill_id") or candidate.get("bill_no")
+            if key:
+                candidates[key] = candidate
+
+        # BILLRCP는 요청 pSize를 그대로 보장하지 않을 수 있으므로
+        # len(rows) < requested pSize 만으로 마지막 페이지라고 판단하지 않는다.
+        # 정렬이 최신순인 일반 응답에서는 검색시작일보다 오래된 페이지가
+        # 연속 3회 나오면 충분히 과거로 내려온 것으로 보고 종료한다.
         if page_dates and max(page_dates) < start:
-            break
-        if len(rows) < monitor.PAGE_SIZE:
+            older_pages_in_a_row += 1
+        else:
+            older_pages_in_a_row = 0
+        if older_pages_in_a_row >= 3:
             break
 
-    return candidates
+    return list(candidates.values())
+
+
+def fetch_candidate_alternatives(session: requests.Session, watched_law: str, anchor_date: date) -> List[Dict]:
+    start = anchor_date - timedelta(days=SEARCH_WINDOW_DAYS_BEFORE)
+    end = anchor_date + timedelta(days=SEARCH_WINDOW_DAYS_AFTER)
+
+    # 1차: 법률명 필터를 함께 보내 API가 지원하면 검색범위를 크게 줄인다.
+    # 일부 환경에서 필터가 무시되거나 부분검색을 지원하지 않을 수 있으므로
+    # 결과가 없으면 2차로 전체 접수목록을 페이지 단위로 충분히 탐색한다.
+    candidates = _collect_receipt_candidates(
+        session,
+        watched_law,
+        start,
+        end,
+        {"BILL_NM": watched_law},
+    )
+    if candidates:
+        return candidates
+
+    print(
+        f"[INFO] BILLRCP 법률명 필터 후보 없음. 전체 접수목록으로 재탐색: {watched_law}"
+    )
+    return _collect_receipt_candidates(session, watched_law, start, end)
 
 
 def find_successor_bill(session: requests.Session, original_entry: Dict, current_lifecycle: Dict) -> Optional[Dict]:
@@ -132,7 +178,6 @@ def find_successor_bill(session: requests.Session, original_entry: Dict, current
             0 if "(대안)" in clean(ranked[1].get("bill_name")) else 1,
             *_date_rank(clean(ranked[1].get("proposal_date")), anchor),
         )
-        # 동일 우선순위 후보가 둘 이상이면 오탐 방지를 위해 자동 연결하지 않는다.
         if first_key == second_key:
             print(f"[WARN] 대안 후보 복수로 자동승계 보류: {original_no} / {ranked[0].get('bill_no')}, {ranked[1].get('bill_no')}")
             return None
@@ -162,7 +207,6 @@ def register_successor(seen: Dict[str, Dict], original_bill_id: str, original_en
         if original_no and original_no not in origins:
             origins.append(original_no)
         existing["origin_bill_nos"] = origins
-        # 직원이 이미 대안 자체를 제외한 경우 false를 존중한다.
         if existing.get("status_tracking") is not False:
             existing["status_tracking"] = True
         return existing
