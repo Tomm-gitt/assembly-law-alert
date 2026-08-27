@@ -1,4 +1,4 @@
-name: Test Official Successor Evidence
+name: "[테스트] 대안반영폐기 후속대안 자동탐색"
 
 on:
   workflow_dispatch:
