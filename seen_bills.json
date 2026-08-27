@@ -3,7 +3,7 @@
     "bill_name": "전자상거래 등에서의 소비자보호에 관한 법률 일부개정법률안",
     "bill_no": "2220645",
     "first_seen_at": "2026-08-24T10:54:35+09:00",
-    "last_status_checked_at": "2026-08-26T06:52:51+09:00",
+    "last_status_checked_at": "2026-08-27T09:56:19+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -21,10 +21,11 @@
     "bill_name": "소비자기본법 일부개정법률안",
     "bill_no": "2220774",
     "first_seen_at": "2026-08-26T06:50:43+09:00",
-    "last_status_checked_at": "2026-08-26T06:52:51+09:00",
+    "last_status_changed_at": "2026-08-27T09:56:19+09:00",
+    "last_status_checked_at": "2026-08-27T09:56:19+09:00",
     "lifecycle": {
-      "committee": "",
-      "committee_referral_date": "",
+      "committee": "정무위원회",
+      "committee_referral_date": "2026-08-26",
       "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_O2O6M0C7C1B6B1Z4A2Z9Z1H8H5G9E0&ageFrom=22&ageTo=22",
       "government_transfer_date": "",
       "law_submit_date": "",
