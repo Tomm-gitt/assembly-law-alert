@@ -29,7 +29,7 @@ jobs:
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
           TEST_ORIGINAL_BILL_NO: ${{ inputs.original_bill_no }}
-        run: python official_successor_evidence_test.py
+        run: python official_successor_evidence_runner.py
 
       - name: Prove production state unchanged
         run: git diff --exit-code -- seen_bills.json
