@@ -1,4 +1,4 @@
-name: Test Promulgation Enforcement Alert
+name: "[테스트] 공포·시행일 알림"
 
 on:
   workflow_dispatch:
