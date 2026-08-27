@@ -1,4 +1,4 @@
-name: Test Full Bill Lifecycle Alert
+name: "[테스트] 전체단계 알림 시뮬레이션"
 
 on:
   workflow_dispatch:
