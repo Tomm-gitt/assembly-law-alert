@@ -55,20 +55,36 @@ def shortened_bill_no(bill_no):
     return digits[3:].lstrip("0") or "0"
 
 
-def compact_date(value):
-    digits = re.sub(r"\D", "", str(value or ""))
-    return digits[:8] if len(digits) >= 8 else digits
+def proposal_date_variants(value):
+    """Return padded/unpadded YYYYMD and YYMD forms used in official HWP tables."""
+    text = clean(value)
+    if not text:
+        return []
+    match = re.search(r"(20\d{2})\D*([01]?\d)\D*([0-3]?\d)", text)
+    if not match:
+        digits = re.sub(r"\D", "", text)
+        return [digits] if digits else []
+    year, month, day = match.groups()
+    month_i = str(int(month))
+    day_i = str(int(day))
+    yy = year[2:]
+    variants = {
+        f"{year}{int(month):02d}{int(day):02d}",
+        f"{yy}{int(month):02d}{int(day):02d}",
+        f"{year}{month_i}{day_i}",
+        f"{yy}{month_i}{day_i}",
+    }
+    return sorted(variants, key=len, reverse=True)
 
 
 def official_document_mentions_original(text, entry):
     """Fail-closed evidence check for an origin bill inside an official document.
 
-    1) Full bill number is strongest and passes directly.
-    2) Some committee documents omit the leading Assembly/session prefix. In that
-       case require an explicit shortened `의안번호` PLUS the representative
-       proposer, and if proposal date is available require that date too. This
-       tolerates HWP extraction control characters/column separation without ever
-       accepting a bare shortened number.
+    Full bill number is strongest. For committee documents that omit the leading
+    Assembly/session prefix, require three independent document-wide factors:
+    shortened bill number, representative proposer, and proposal date. Official
+    HWP tables may serialize cells out of row order and may omit zero-padding in
+    dates, so matching is document-wide but still multi-factor and candidate-unique.
     """
     full_no = clean(entry.get("bill_no"))
     compact = compact_document(text)
@@ -77,25 +93,29 @@ def official_document_mentions_original(text, entry):
 
     short_no = shortened_bill_no(full_no)
     proposer = representative_proposer(entry.get("proposer"))
-    proposal_date = compact_date(entry.get("proposal_date"))
+    date_variants = proposal_date_variants(entry.get("proposal_date"))
     if not short_no or not proposer:
         return False, ""
 
-    short_pattern = re.compile(rf"의안번호(?:제)?0*{re.escape(short_no)}(?!\d)")
-    if not short_pattern.search(compact):
-        return False, ""
-    if proposer not in compact:
+    # Prefer explicit official label, but HWP extraction can drop/split the label.
+    labeled_short = bool(re.search(rf"의안번호(?:제)?0*{re.escape(short_no)}(?:호)?(?!\d)", compact))
+    standalone_short = bool(re.search(rf"(?<!\d)0*{re.escape(short_no)}(?!\d)", compact))
+    proposer_found = proposer in compact
+    matched_date = next((variant for variant in date_variants if variant and variant in compact), "")
+
+    print(
+        f"[DEBUG] 공식문서 원의안 요소: full={full_no or '-'} / short={short_no or '-'} "
+        f"/ labeled_short={labeled_short} / standalone_short={standalone_short} "
+        f"/ proposer={proposer or '-'}:{proposer_found} / date_variants={date_variants} "
+        f"/ matched_date={matched_date or '-'}"
+    )
+
+    if not standalone_short or not proposer_found or not matched_date:
         return False, ""
 
-    if proposal_date and proposal_date not in compact:
-        # Official tables sometimes print dates as YY.MM.DD; accept that form too.
-        short_date = proposal_date[2:] if len(proposal_date) == 8 else proposal_date
-        if not short_date or short_date not in compact:
-            return False, ""
-
-    evidence = f"short_bill_no+proposer:{short_no}+{proposer}"
-    if proposal_date:
-        evidence += f"+date:{proposal_date}"
+    evidence = f"short_bill_no+proposer+date:{short_no}+{proposer}+{matched_date}"
+    if labeled_short:
+        evidence = "labeled_" + evidence
     return True, evidence
 
 
