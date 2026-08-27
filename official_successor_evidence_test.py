@@ -33,6 +33,59 @@ def compact_whitespace(value):
     return re.sub(r"\s+", "", str(value or ""))
 
 
+def representative_proposer(value):
+    text = clean(value)
+    if not text:
+        return ""
+    match = re.search(r"([가-힣]{2,5})\s*의원", text)
+    if match:
+        return match.group(1)
+    return text.split("등", 1)[0].strip()
+
+
+def shortened_bill_no(bill_no):
+    """Return the bill number form often printed in committee documents.
+
+    Example: 2209981 -> 9981, 2210213 -> 10213.
+    The first three digits are the Assembly/session prefix in the 22nd Assembly
+    numbering currently used by these official documents.
+    """
+    digits = re.sub(r"\D", "", str(bill_no or ""))
+    if len(digits) <= 3:
+        return ""
+    return digits[3:].lstrip("0") or "0"
+
+
+def official_document_mentions_original(text, entry):
+    """Fail-closed evidence check for an origin bill inside an official document.
+
+    Primary evidence is the full bill number. Some official committee tables omit
+    the leading Assembly/session prefix (e.g. 2209981 is printed as 의안번호 9981).
+    In that case, require BOTH an explicit 의안번호 context and the representative
+    proposer's name in the same local document window. A bare shortened number is
+    never sufficient.
+    """
+    full_no = clean(entry.get("bill_no"))
+    compact = compact_whitespace(text)
+    if full_no and full_no in compact:
+        return True, "full_bill_no"
+
+    short_no = shortened_bill_no(full_no)
+    proposer = representative_proposer(entry.get("proposer"))
+    if not short_no or not proposer:
+        return False, ""
+
+    pattern = re.compile(rf"의안번호(?:제)?0*{re.escape(short_no)}(?!\d)")
+    for match in pattern.finditer(compact):
+        start = max(0, match.start() - 600)
+        end = min(len(compact), match.end() + 600)
+        window = compact[start:end]
+        if proposer in window:
+            return True, f"short_bill_no+proposer:{short_no}+{proposer}"
+
+    return False, ""
+
+
 def fetch_html(session, url):
     response = session.get(url, timeout=30)
     response.raise_for_status()
@@ -127,12 +180,19 @@ def fetch_original_identity_and_lifecycle(session):
     if not law_name:
         raise RuntimeError(f"관리대상 법률명 자동판별 실패: {bill_name}")
 
+    proposer = clean(
+        member.get("PROPOSER")
+        or member.get("RST_PROPOSER")
+        or member.get("PUBL_PROPOSER")
+    )
+
     entry = {
         "bill_id": bill_id,
         "bill_no": ORIGINAL_BILL_NO,
         "bill_name": bill_name,
         "matched_law": law_name,
         "proposal_date": clean(member.get("PROPOSE_DT")),
+        "proposer": proposer,
     }
     lifecycle = status_monitor.fetch_lifecycle(session, bill_id, entry)
     if not lifecycle:
@@ -165,6 +225,8 @@ def main():
 
         print(f"[PASS] 원의안 자동 식별: {ORIGINAL_BILL_NO} / {entry['bill_name']}")
         print(f"[PASS] 관리 법률명 자동 판별: {law_name}")
+        if entry.get("proposer"):
+            print(f"[INFO] 원의안 대표발의자 자동 확인: {representative_proposer(entry.get('proposer'))}")
         print(
             f"[PASS] 대안반영폐기 자동 확인: {ORIGINAL_BILL_NO} / "
             f"{lifecycle.get('committee_process_date')} / {committee or '-'}"
@@ -232,19 +294,20 @@ def main():
                         )
                         continue
 
-                    if ORIGINAL_BILL_NO not in compact_whitespace(text):
+                    matched, evidence_kind = official_document_mentions_original(text, entry)
+                    if not matched:
                         continue
 
                     matched_docs.append((label, pdf_url))
                     print(
-                        f"[PASS] 공식문서에서 원의안번호 발견: "
-                        f"{ORIGINAL_BILL_NO} -> 후보 {candidate_no} / {label}"
+                        f"[PASS] 공식문서에서 원의안 근거 발견: "
+                        f"{ORIGINAL_BILL_NO} -> 후보 {candidate_no} / {label} / {evidence_kind}"
                     )
 
                 if matched_docs:
                     evidence_matches.append((candidate, matched_docs))
                 else:
-                    print(f"[INFO] 공식문서에 원의안번호 없음: 후보 {candidate_no}")
+                    print(f"[INFO] 공식문서에 원의안 근거 없음: 후보 {candidate_no}")
 
             except Exception as exc:
                 print(f"[WARN] 후보 공식자료 검증 실패: {candidate_no} / {exc}")
