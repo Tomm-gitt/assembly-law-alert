@@ -1,6 +1,6 @@
 import re
 from datetime import date, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 
@@ -8,7 +8,7 @@ import monitor
 
 
 SEARCH_WINDOW_DAYS_BEFORE = 7
-SEARCH_WINDOW_DAYS_AFTER = 21
+SEARCH_WINDOW_DAYS_AFTER = 120
 MAX_RECEIPT_PAGES = 10
 
 
@@ -37,17 +37,22 @@ def _is_committee_alternative_bill(row: Dict, watched_law: str) -> bool:
         return False
 
     proposer_kind = clean(row.get("PPSR_KIND"))
+    # 동일 법률의 일반 의원안과 혼동하지 않도록 '대안' 제목 또는 위원회 제안만 허용한다.
     if "(대안)" not in bill_name and "대안" not in bill_name:
         if "위원" not in proposer_kind:
             return False
     return True
 
 
-def _date_distance_days(value: str, anchor: date) -> Optional[int]:
+def _date_rank(value: str, anchor: date) -> Tuple[int, int]:
     parsed = monitor.parse_date(value)
     if not parsed:
-        return None
-    return abs((parsed - anchor).days)
+        return (2, 9999)
+    delta = (parsed - anchor).days
+    # 대안반영폐기 이후에 제안된 대안을 최우선. 며칠 먼저 접수된 경우만 차선으로 허용한다.
+    if delta >= 0:
+        return (0, delta)
+    return (1, abs(delta))
 
 
 def fetch_candidate_alternatives(session: requests.Session, watched_law: str, anchor_date: date) -> List[Dict]:
@@ -112,7 +117,7 @@ def find_successor_bill(session: requests.Session, original_entry: Dict, current
         candidates,
         key=lambda c: (
             0 if "(대안)" in clean(c.get("bill_name")) else 1,
-            _date_distance_days(clean(c.get("proposal_date")), anchor) or 9999,
+            *_date_rank(clean(c.get("proposal_date")), anchor),
             clean(c.get("bill_no")),
         ),
     )
@@ -121,12 +126,13 @@ def find_successor_bill(session: requests.Session, original_entry: Dict, current
     if len(ranked) > 1:
         first_key = (
             0 if "(대안)" in clean(ranked[0].get("bill_name")) else 1,
-            _date_distance_days(clean(ranked[0].get("proposal_date")), anchor) or 9999,
+            *_date_rank(clean(ranked[0].get("proposal_date")), anchor),
         )
         second_key = (
             0 if "(대안)" in clean(ranked[1].get("bill_name")) else 1,
-            _date_distance_days(clean(ranked[1].get("proposal_date")), anchor) or 9999,
+            *_date_rank(clean(ranked[1].get("proposal_date")), anchor),
         )
+        # 동일 우선순위 후보가 둘 이상이면 오탐 방지를 위해 자동 연결하지 않는다.
         if first_key == second_key:
             print(f"[WARN] 대안 후보 복수로 자동승계 보류: {original_no} / {ranked[0].get('bill_no')}, {ranked[1].get('bill_no')}")
             return None
@@ -156,6 +162,7 @@ def register_successor(seen: Dict[str, Dict], original_bill_id: str, original_en
         if original_no and original_no not in origins:
             origins.append(original_no)
         existing["origin_bill_nos"] = origins
+        # 직원이 이미 대안 자체를 제외한 경우 false를 존중한다.
         if existing.get("status_tracking") is not False:
             existing["status_tracking"] = True
         return existing
