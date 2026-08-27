@@ -21,8 +21,8 @@ def clean(value):
     return re.sub(r"\s+", " ", str(value or "")).strip()
 
 
-def normalize_digits(value):
-    return re.sub(r"\D", "", str(value or ""))
+def compact_whitespace(value):
+    return re.sub(r"\s+", "", str(value or ""))
 
 
 def fetch_html(session, url):
@@ -88,23 +88,16 @@ def main():
         original_html = fetch_html(session, original_url)
         original_text = extract_plain_text(original_html)
 
-        if "대안반영폐기" not in re.sub(r"\s+", "", original_text):
+        if "대안반영폐기" not in compact_whitespace(original_text):
             raise RuntimeError("원의안 공식 상세페이지에서 '대안반영폐기'를 확인하지 못했습니다.")
-        if monitor.match_watched_law(original_text) != LAW_NAME and LAW_NAME not in original_text:
+        if LAW_NAME not in original_text:
             raise RuntimeError(f"원의안 법률명 검증 실패: {LAW_NAME}")
         print(f"[PASS] 원의안 대안반영폐기 확인: {ORIGINAL_BILL_NO}")
 
-        original_entry = {
-            "bill_no": ORIGINAL_BILL_NO,
-            "matched_law": LAW_NAME,
-            "proposal_date": "2025-04-29",
-        }
-        current_lifecycle = {"committee_process_date": "2025-12-17"}
-        candidates = alternative_successor.fetch_candidate_alternatives(
-            session,
-            LAW_NAME,
-            monitor.parse_date(current_lifecycle["committee_process_date"]),
-        )
+        # 이 테스트 사례의 실제 소관위 처리일을 anchor로 사용한다.
+        # 후보 생성은 어디까지나 탐색용이며, 아래 PDF+API 공식근거 없이는 PASS되지 않는다.
+        anchor = monitor.parse_date("2025-12-17")
+        candidates = alternative_successor.fetch_candidate_alternatives(session, LAW_NAME, anchor)
         candidates = [c for c in candidates if clean(c.get("bill_no")) != ORIGINAL_BILL_NO]
         if not candidates:
             raise RuntimeError("후속 위원회 대안 후보를 찾지 못했습니다.")
@@ -121,16 +114,24 @@ def main():
                 detail_text = extract_plain_text(detail_html)
                 if LAW_NAME not in detail_text or "대안" not in detail_text:
                     continue
+
                 pdf_url = find_pdf_url(detail_url, detail_html)
                 if not pdf_url:
                     print(f"[WARN] 공식 의안원문 PDF 링크 없음: {candidate_no}")
                     continue
+
                 text = pdf_text(session, pdf_url)
-                compact = normalize_digits(text)
+                compact = compact_whitespace(text)
                 if ORIGINAL_BILL_NO not in compact:
-                    print(f"[INFO] PDF에 원의안번호 없음: {candidate_no}")
+                    print(f"[INFO] 공식 PDF에 원의안번호 없음: {candidate_no}")
                     continue
-                evidence_matches.append((candidate, pdf_url, text))
+
+                # PDF 자체가 대안 문서인지도 함께 확인한다.
+                if "대안" not in text and "대 안" not in text:
+                    print(f"[WARN] PDF에서 대안 문구를 확인하지 못함: {candidate_no}")
+                    continue
+
+                evidence_matches.append((candidate, pdf_url))
                 print(f"[PASS] 공식 PDF에서 원의안번호 확인: {ORIGINAL_BILL_NO} -> 후보 {candidate_no}")
             except Exception as exc:
                 print(f"[WARN] 후보 공식 PDF 검증 실패: {candidate_no} / {exc}")
@@ -141,8 +142,9 @@ def main():
                 f"후보={[clean(c.get('bill_no')) for c in candidates]}"
             )
 
-        successor, pdf_url, _ = evidence_matches[0]
+        successor, pdf_url = evidence_matches[0]
         successor_no = clean(successor.get("bill_no"))
+
         row = exact_receipt_row(session, successor_no)
         if not row:
             raise RuntimeError(f"국회 API에서 대안 의안번호 재검증 실패: {successor_no}")
