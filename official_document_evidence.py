@@ -2,7 +2,7 @@ import io
 import re
 import struct
 import zlib
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 
 import olefile
 from bs4 import BeautifulSoup
@@ -118,13 +118,17 @@ def _extract_hwp_text(content):
                 tag_id = record & 0x3FF
                 size = (record >> 20) & 0xFFF
                 if size == 0xFFF:
-                    if pos + 4 > len(data): break
+                    if pos + 4 > len(data):
+                        break
                     size = int.from_bytes(data[pos:pos + 4], "little"); pos += 4
-                if pos + size > len(data): break
+                if pos + size > len(data):
+                    break
                 payload = data[pos:pos + size]; pos += size
-                if tag_id != 67 or not payload: continue
+                if tag_id != 67 or not payload:
+                    continue
                 text = _strip_hwp_ctrl(payload).decode("utf-16le", errors="ignore")
-                if text.strip(): texts.append(text)
+                if text.strip():
+                    texts.append(text)
         if texts:
             return "\n".join(texts)
         if ole.exists("PrvText"):
@@ -132,15 +136,58 @@ def _extract_hwp_text(content):
         return ""
 
 
-def download_and_extract_text(session, url, referer=None):
-    headers = {"Referer": referer} if referer else {}
+def _host_variants(url):
+    """Try both currently observed 국민참여입법센터 hostnames for the same attachment id."""
+    parsed = urlparse(url)
+    hosts = [parsed.netloc]
+    if parsed.netloc == "opinion.lawmaking.go.kr":
+        hosts.append("community.lawmaking.go.kr")
+    elif parsed.netloc == "community.lawmaking.go.kr":
+        hosts.append("opinion.lawmaking.go.kr")
+    variants = []
+    for host in hosts:
+        variants.append(urlunparse((parsed.scheme, host, parsed.path, parsed.params, parsed.query, parsed.fragment)))
+    return variants
+
+
+def _download_attempt(session, url, referer=None):
+    headers = {
+        "Accept": "application/pdf,application/x-hwp,application/haansofthwp,application/octet-stream,*/*;q=0.8",
+        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.7",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+    }
+    if referer:
+        headers["Referer"] = referer
     response = session.get(url, headers=headers, timeout=45, allow_redirects=True)
     response.raise_for_status()
-    content = response.content
-    if content.startswith(b"%PDF"):
-        return "pdf", _extract_pdf_text(content)
-    if content.startswith(OLE_MAGIC):
-        return "hwp", _extract_hwp_text(content)
+    return response
+
+
+def download_and_extract_text(session, url, referer=None):
+    # Prime the session first. The attachment server may require cookies created by the detail page.
+    if referer:
+        try:
+            session.get(referer, timeout=30, allow_redirects=True)
+        except Exception:
+            pass
+
+    attempts = []
+    for candidate_url in _host_variants(url):
+        try:
+            response = _download_attempt(session, candidate_url, referer=referer)
+            content = response.content
+            attempts.append(
+                f"{candidate_url}: status={response.status_code}, size={len(content)}, "
+                f"content-type={response.headers.get('content-type')}, final={response.url}"
+            )
+            if content.startswith(b"%PDF"):
+                return "pdf", _extract_pdf_text(content)
+            if content.startswith(OLE_MAGIC):
+                return "hwp", _extract_hwp_text(content)
+        except Exception as exc:
+            attempts.append(f"{candidate_url}: {type(exc).__name__}: {exc}")
+
     raise RuntimeError(
-        f"지원 문서(PDF/HWP)가 아닙니다: {url} / content-type={response.headers.get('content-type')} / size={len(content)}"
+        "공식 첨부문서 다운로드 실패: " + " | ".join(attempts)
     )

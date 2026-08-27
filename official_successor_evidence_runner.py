@@ -2,17 +2,25 @@ import official_document_evidence as evidence
 import official_successor_evidence_test as test
 
 
+_REFERER_BY_URL = {}
+
+
 def find_official_document_urls(detail_url, html_text):
     docs = evidence.find_official_document_urls(detail_url, html_text)
     print(f"[INFO] 공식 첨부문서 탐지 수={len(docs)}")
     for label, url in docs:
+        _REFERER_BY_URL[url] = detail_url
         print(f"[INFO] 공식 첨부문서 후보: {label} / {url}")
     return docs
 
 
 def extract_official_document_text(session, url):
-    kind, text = evidence.download_and_extract_text(session, url)
-    print(f"[INFO] 공식 첨부문서 형식 확인: {kind.upper()} / {url} / text_len={len(text)}")
+    referer = _REFERER_BY_URL.get(url)
+    kind, text = evidence.download_and_extract_text(session, url, referer=referer)
+    print(
+        f"[INFO] 공식 첨부문서 형식 확인: {kind.upper()} / {url} / "
+        f"text_len={len(text)} / referer={referer or '-'}"
+    )
     return text
 
 
