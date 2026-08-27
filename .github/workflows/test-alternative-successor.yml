@@ -1,0 +1,25 @@
+name: Test Alternative Successor Tracking
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-alternative-successor:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run real-data successor test
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python test_alternative_successor_realdata.py
