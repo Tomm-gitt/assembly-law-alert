@@ -5,11 +5,11 @@ import requests
 
 import status_monitor
 from alternative_successor import (
-    find_successor_bill,
     is_alternative_reflection_result,
     register_successor,
 )
 from post_plenary import fetch_post_plenary_status
+from successor_resolution import find_verified_successor_bill
 
 # 실제 알림은 핵심 단계만 사용한다.
 status_monitor.MILESTONES = [
@@ -103,14 +103,16 @@ def main() -> int:
             current = status_monitor.merge_snapshot(previous, current_raw)
             changes = status_monitor.detect_changes(previous, current) if previous else []
 
-            # 대안반영폐기 감지 → 동일 법률의 위원회 대안을 찾아 자동승계한다.
+            # 대안반영폐기 감지 → LIKMS의 명시적 selRefBillId 관계를 국회 API로
+            # 정확 재검증한 경우에만 위원회 대안으로 자동승계한다.
+            # 동일 법률·시기 후보탐색은 보조 교차검증일 뿐 자동승계 근거가 아니다.
             # status_tracking=true인 원 의안만 이 경로에 들어오므로 제외된 의안은 승계하지 않는다.
             if _alternative_reflected(current_raw) and not entry.get("alternative_reflection"):
                 try:
-                    successor = find_successor_bill(session, entry, current_raw)
+                    successor = find_verified_successor_bill(session, entry, current_raw)
                 except Exception as exc:
                     successor = None
-                    print(f"[WARN] 위원회 대안 탐색 실패: {entry.get('bill_no') or bill_id} / {exc}")
+                    print(f"[WARN] 공식 위원회 대안 관계조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
 
                 if successor:
                     successor_entry = register_successor(seen, bill_id, entry, successor, now)
@@ -129,15 +131,15 @@ def main() -> int:
                 else:
                     entry["alternative_successor_pending"] = True
                     entry["alternative_successor_last_checked_at"] = now
-                    print(f"[WARN] 대안반영폐기 감지했으나 후속 대안 미확정: {entry.get('bill_no')}")
+                    print(f"[WARN] 대안반영폐기 감지했으나 공식 후속 대안 미확정: {entry.get('bill_no')}")
 
-            # 이전 실행에서 대안이 아직 확인되지 않았다면 매일 다시 탐색한다.
+            # 이전 실행에서 대안이 아직 확인되지 않았다면 매일 LIKMS 공식관계를 다시 확인한다.
             elif entry.get("alternative_successor_pending") and not entry.get("alternative_reflection"):
                 try:
-                    successor = find_successor_bill(session, entry, current_raw)
+                    successor = find_verified_successor_bill(session, entry, current_raw)
                 except Exception as exc:
                     successor = None
-                    print(f"[WARN] 위원회 대안 재탐색 실패: {entry.get('bill_no') or bill_id} / {exc}")
+                    print(f"[WARN] 공식 위원회 대안 관계 재조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
                 entry["alternative_successor_last_checked_at"] = now
                 if successor:
                     successor_entry = register_successor(seen, bill_id, entry, successor, now)
@@ -150,7 +152,7 @@ def main() -> int:
                         "old": "대안 연결 대기",
                         "new": f"의안번호 {successor_no} · {successor_name}",
                     })
-                    print(f"[INFO] 위원회 대안 재탐색 성공: {entry.get('bill_no')} → {successor_no}")
+                    print(f"[INFO] 위원회 대안 공식관계 재확인 성공: {entry.get('bill_no')} → {successor_no}")
 
             # 과거 의안이 앞으로 정부이송 단계에서 처음 발견된 경우 그 이벤트만 1회 알림한다.
             if not previous and entry.get("late_stage_discovered_event") == "정부이송":

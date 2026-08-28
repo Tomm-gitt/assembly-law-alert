@@ -1,0 +1,39 @@
+name: "[테스트] LIKMS 대안승계 회귀검증"
+
+on:
+  pull_request:
+    paths:
+      - 'likms_successor.py'
+      - 'successor_resolution.py'
+      - 'status_alert_runner.py'
+      - 'alternative_successor.py'
+      - 'likms_successor_regression_test.py'
+      - '.github/workflows/test-likms-successor-regression.yml'
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile production successor modules
+        run: python -m py_compile likms_successor.py successor_resolution.py status_alert_runner.py alternative_successor.py
+
+      - name: Verify two official successor relationships
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python likms_successor_regression_test.py
+
+      - name: Prove production state unchanged
+        run: git diff --exit-code -- seen_bills.json
