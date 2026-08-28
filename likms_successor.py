@@ -9,7 +9,8 @@ import monitor
 
 LIKMS_DETAIL_URL = "https://likms.assembly.go.kr/bill/bi/billDetailPage.do"
 LIKMS_SUGGEST_URL = "https://likms.assembly.go.kr/bill/bi/bill/state/suggestBillPage.do"
-BILL_NO_RE = re.compile(r"(?<!\d)(2\d{6})(?!\d)")
+# This monitor currently targets the 22nd Assembly; avoid mistaking 26000xx menu IDs for bill numbers.
+BILL_NO_RE = re.compile(r"(?<!\d)(22\d{5})(?!\d)")
 URL_RE = re.compile(r"(?:https?://[^\"'<>\s]+|/[A-Za-z0-9_./?=&%-]+\.do(?:\?[^\"'<>\s]*)?)")
 
 
@@ -56,7 +57,6 @@ def _bill_numbers(text: str, allowed: Optional[Set[str]] = None) -> Set[str]:
 def _alternative_context_numbers(html_text: str, allowed: Optional[Set[str]] = None) -> Set[str]:
     soup = BeautifulSoup(html_text, "html.parser")
     found: Set[str] = set()
-
     for node in soup.find_all(string=re.compile(r"대안정보|대안")):
         parent = node.parent
         for _ in range(5):
@@ -64,13 +64,33 @@ def _alternative_context_numbers(html_text: str, allowed: Optional[Set[str]] = N
                 break
             found.update(_bill_numbers(clean(parent.get_text(" ", strip=True)), allowed))
             parent = parent.parent
-
     raw = str(html_text or "")
     for m in re.finditer(r"대안정보|대안", raw):
         start = max(0, m.start() - 2500)
         end = min(len(raw), m.end() + 5000)
         found.update(_bill_numbers(raw[start:end], allowed))
     return found
+
+
+def _debug_suggest_call(html_text: str) -> None:
+    """Print only the LIKMS source fragments needed to learn the tab request contract."""
+    soup = BeautifulSoup(html_text, "html.parser")
+    inputs = []
+    for tag in soup.find_all("input"):
+        name = clean(tag.get("name"))
+        value = clean(tag.get("value"))
+        if name and any(token in name.lower() for token in ("bill", "id", "menu", "suggest")):
+            inputs.append((name, value))
+    if inputs:
+        print(f"[DEBUG] LIKMS 관련 hidden/input: {inputs[:30]}")
+
+    raw = str(html_text or "")
+    for token in ("suggestBillPage.do", "suggestBillPage", "대안정보"):
+        idx = raw.find(token)
+        if idx >= 0:
+            snippet = re.sub(r"\s+", " ", raw[max(0, idx - 1200):idx + 2200])
+            print(f"[DEBUG] LIKMS {token} 호출문맥: {snippet[:3400]}")
+            break
 
 
 def _discover_alt_related_urls(base_url: str, html_text: str) -> List[str]:
@@ -112,17 +132,10 @@ def _discover_alt_related_urls(base_url: str, html_text: str) -> List[str]:
             continue
         for match in URL_RE.findall(text):
             add(match)
-
     return urls[:20]
 
 
-def _consume_response(
-    response: requests.Response,
-    matched: Set[str],
-    evidence_urls: List[str],
-    *,
-    dedicated: bool = False,
-) -> None:
+def _consume_response(response: requests.Response, matched: Set[str], evidence_urls: List[str], *, dedicated: bool = False) -> None:
     evidence_urls.append(response.url)
     matched.update(_alternative_context_numbers(response.text))
     if dedicated:
@@ -135,21 +148,14 @@ def fetch_likms_successor_bill_nos(
     original_bill_id: str,
     candidate_bill_nos: Iterable[str] = (),
 ) -> Tuple[List[str], List[str]]:
-    """Read the official LIKMS alternative-information surface first.
-
-    The optional candidate list is only a downstream filter/corroboration aid. Relationship
-    discovery itself does not depend on the 국민참여입법센터 candidate list.
-    """
     original_bill_id = clean(original_bill_id)
     if not original_bill_id:
         return [], []
 
-    detail_response = _get(
-        session,
-        LIKMS_DETAIL_URL,
-        params={"billId": original_bill_id, "currMenuNo": "2600044"},
-    )
+    detail_response = _get(session, LIKMS_DETAIL_URL, params={"billId": original_bill_id, "currMenuNo": "2600044"})
     detail_url = detail_response.url
+    _debug_suggest_call(detail_response.text)
+
     evidence_urls: List[str] = []
     matched: Set[str] = set()
     _consume_response(detail_response, matched, evidence_urls)
@@ -162,20 +168,13 @@ def fetch_likms_successor_bill_nos(
     ]
     for method, payload in direct_attempts:
         try:
-            if method == "GET":
-                response = _get(session, LIKMS_SUGGEST_URL, params=payload, referer=detail_url)
-            else:
-                response = _post(session, LIKMS_SUGGEST_URL, data=payload, referer=detail_url)
+            response = _get(session, LIKMS_SUGGEST_URL, params=payload, referer=detail_url) if method == "GET" else _post(session, LIKMS_SUGGEST_URL, data=payload, referer=detail_url)
         except Exception as exc:
             print(f"[WARN] LIKMS 대안정보 직접조회 실패: {method} / {payload} / {exc}")
             continue
         before = set(matched)
         _consume_response(response, matched, evidence_urls, dedicated=True)
-        print(
-            f"[INFO] LIKMS 대안정보 직접조회: {method} / {payload} / "
-            f"status={response.status_code} / len={len(response.text)} / "
-            f"new_matches={sorted(matched - before)}"
-        )
+        print(f"[INFO] LIKMS 대안정보 직접조회: {method} / {payload} / status={response.status_code} / len={len(response.text)} / new_matches={sorted(matched - before)}")
 
     for url in _discover_alt_related_urls(detail_url, detail_response.text):
         if url.startswith(LIKMS_SUGGEST_URL):
