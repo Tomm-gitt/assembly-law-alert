@@ -17,18 +17,62 @@ def clean(value):
     return status_monitor.clean(value)
 
 
+def _exact_origin_row(session, bill_no):
+    lookup = {"bill_no": bill_no}
+
+    # 1) 의원발의 API: 기존 회귀사례의 가장 안정적인 경로
+    try:
+        row = status_monitor.fetch_matching_row(
+            session,
+            monitor.MEMBER_BILLS_API,
+            lookup,
+            include_age=True,
+        )
+        if row and clean(row.get("BILL_NO")) == bill_no:
+            print(f"[INFO] 원의안 조회 경로: MEMBER_BILLS_API / {bill_no}")
+            return row
+    except Exception as exc:
+        print(f"[WARN] 의원발의 API 원의안 조회 실패: {bill_no} / {exc}")
+
+    # 2) 처리의안 API: 정부안/위원회안 등 의원발의 API 밖의 의안을 보완
+    try:
+        row = status_monitor.fetch_matching_row(
+            session,
+            status_monitor.PROCESSED_API,
+            lookup,
+            include_age=True,
+        )
+        if row and clean(row.get("BILL_NO")) == bill_no:
+            print(f"[INFO] 원의안 조회 경로: PROCESSED_API / {bill_no}")
+            return row
+    except Exception as exc:
+        print(f"[WARN] 처리의안 API 원의안 조회 실패: {bill_no} / {exc}")
+
+    # 3) 접수의안 API: 최종 fallback. 반드시 exact BILL_NO만 허용한다.
+    try:
+        data = monitor.request_api(
+            session,
+            monitor.RECEIPT_API,
+            {"pIndex": "1", "pSize": "100", "BILL_NO": bill_no},
+        )
+        rows = monitor.parse_rows(data, monitor.RECEIPT_API)
+        for row in rows:
+            if clean(row.get("BILL_NO")) == bill_no:
+                print(f"[INFO] 원의안 조회 경로: RECEIPT_API / {bill_no}")
+                return row
+    except Exception as exc:
+        print(f"[WARN] 접수의안 API 원의안 조회 실패: {bill_no} / {exc}")
+
+    return None
+
+
 def load_origin(session, bill_no):
-    member = status_monitor.fetch_matching_row(
-        session,
-        monitor.MEMBER_BILLS_API,
-        {"bill_no": bill_no},
-        include_age=True,
-    )
-    if not member:
+    origin = _exact_origin_row(session, bill_no)
+    if not origin:
         raise RuntimeError(f"원의안 조회 실패: {bill_no}")
 
-    bill_id = clean(member.get("BILL_ID"))
-    bill_name = clean(member.get("BILL_NAME"))
+    bill_id = clean(origin.get("BILL_ID"))
+    bill_name = clean(origin.get("BILL_NAME") or origin.get("BILL_NM"))
     law_name = monitor.match_watched_law(bill_name)
     if not bill_id or not law_name:
         raise RuntimeError(f"원의안 식별 실패: {bill_no} / {bill_name}")
@@ -38,7 +82,7 @@ def load_origin(session, bill_no):
         "bill_no": bill_no,
         "bill_name": bill_name,
         "matched_law": law_name,
-        "proposal_date": clean(member.get("PROPOSE_DT")),
+        "proposal_date": clean(origin.get("PROPOSE_DT") or origin.get("PPSL_DT")),
         "status_tracking": True,
     }
     lifecycle = status_monitor.fetch_lifecycle(session, bill_id, entry) or {}
