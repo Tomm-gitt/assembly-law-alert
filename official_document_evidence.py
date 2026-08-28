@@ -88,10 +88,26 @@ def _strip_hwp_ctrl(data):
             elif code in char_ctrl:
                 pos += 2
             else:
+                # HWP extended controls normally occupy 8 WCHARs total.
                 pos += 16
         else:
             out.extend(data[pos:pos + 2]); pos += 2
     return bytes(out)
+
+
+def _raw_hwp_text(payload):
+    """Recovery view of HWPTAG_PARA_TEXT.
+
+    The normal control-aware parser is authoritative. Some National Assembly HWP
+    tables, however, keep short numeric cell values in/around field controls and
+    the strict skip can hide only that first table column. Decode the same
+    paragraph payload a second way and remove control characters without skipping
+    following UTF-16 units. This recovery text is used only together with the
+    existing multi-factor successor evidence checks.
+    """
+    raw = payload.decode("utf-16le", errors="ignore")
+    raw = re.sub(r"[\x00-\x1f]+", " ", raw)
+    return raw
 
 
 def _extract_hwp_text(content):
@@ -107,7 +123,9 @@ def _extract_hwp_text(content):
             if joined.startswith("BodyText/Section"):
                 sections.append(joined)
         sections.sort(key=lambda x: int(re.search(r"Section(\d+)$", x).group(1)))
+
         texts = []
+        recovery_texts = []
         for name in sections:
             data = ole.openstream(name).read()
             if compressed:
@@ -126,14 +144,30 @@ def _extract_hwp_text(content):
                 payload = data[pos:pos + size]; pos += size
                 if tag_id != 67 or not payload:
                     continue
+
                 text = _strip_hwp_ctrl(payload).decode("utf-16le", errors="ignore")
                 if text.strip():
                     texts.append(text)
-        if texts:
-            return "\n".join(texts)
+
+                raw_text = _raw_hwp_text(payload)
+                if raw_text.strip() and raw_text != text:
+                    recovery_texts.append(raw_text)
+
+        # PrvText is an official rendered-text preview embedded in HWP v5. Append
+        # it even when BodyText extraction succeeded because it can preserve table
+        # cell values omitted by the paragraph-control parser.
+        preview_text = ""
         if ole.exists("PrvText"):
-            return ole.openstream("PrvText").read().decode("utf-16le", errors="ignore")
-        return ""
+            preview_text = ole.openstream("PrvText").read().decode("utf-16le", errors="ignore")
+
+        parts = []
+        if texts:
+            parts.append("\n".join(texts))
+        if preview_text.strip():
+            parts.append(preview_text)
+        if recovery_texts:
+            parts.append("\n".join(recovery_texts))
+        return "\n".join(parts)
 
 
 def _host_variants(url):
