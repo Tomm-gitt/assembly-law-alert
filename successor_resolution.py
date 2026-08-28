@@ -12,8 +12,8 @@ def clean(value) -> str:
     return status_monitor.clean(value)
 
 
-def _exact_api_row(session: requests.Session, bill_no: str) -> Optional[Dict]:
-    lookup = {"bill_no": bill_no}
+def _exact_api_row_by_id(session: requests.Session, bill_id: str) -> Optional[Dict]:
+    lookup = {"bill_id": bill_id}
     for endpoint, include_age in [
         (monitor.MEMBER_BILLS_API, True),
         (status_monitor.PROCESSED_API, True),
@@ -26,27 +26,14 @@ def _exact_api_row(session: requests.Session, bill_no: str) -> Optional[Dict]:
                 include_age=include_age,
             )
         except Exception as exc:
-            print(f"[WARN] 후속대안 국회 API 검증 실패: {endpoint} / {bill_no} / {exc}")
+            print(f"[WARN] 후속대안 국회 API BILL_ID 검증 실패: {endpoint} / {bill_id} / {exc}")
             continue
-        if row and clean(row.get("BILL_NO")) == bill_no:
+        if row and clean(row.get("BILL_ID")) == bill_id:
             return row
-
-    try:
-        data = monitor.request_api(
-            session,
-            monitor.RECEIPT_API,
-            {"pIndex": "1", "pSize": "100", "BILL_NO": bill_no},
-        )
-        rows = monitor.parse_rows(data, monitor.RECEIPT_API)
-        for row in rows:
-            if clean(row.get("BILL_NO")) == bill_no:
-                return row
-    except Exception as exc:
-        print(f"[WARN] 후속대안 BILLRCP 검증 실패: {bill_no} / {exc}")
     return None
 
 
-def _row_to_successor(row: Dict, relationship_source: str) -> Dict:
+def _row_to_successor(row: Dict) -> Dict:
     return {
         "bill_id": clean(row.get("BILL_ID")),
         "bill_no": clean(row.get("BILL_NO")),
@@ -59,7 +46,7 @@ def _row_to_successor(row: Dict, relationship_source: str) -> Dict:
             or row.get("PUBL_PROPOSER")
         ),
         "detail_link": clean(row.get("DETAIL_LINK") or row.get("LINK_URL")),
-        "relationship_source": relationship_source,
+        "relationship_source": "likms_selRefBillId",
     }
 
 
@@ -84,16 +71,6 @@ def find_verified_successor_bill(
     original_entry: Dict,
     current_lifecycle: Dict,
 ) -> Optional[Dict]:
-    """Resolve committee alternatives from explicit official relationship evidence.
-
-    Priority:
-    1. LIKMS 대안정보: direct relationship numbers.
-    2. Exact Assembly API identity validation of every number returned by LIKMS.
-    3. 국민참여입법센터 candidate discovery is auxiliary only and never sufficient.
-
-    If the official relationship does not converge to exactly one validated bill,
-    return None so production remains pending rather than risking a wrong successor.
-    """
     watched_law = clean(original_entry.get("matched_law"))
     original_bill_id = clean(original_entry.get("bill_id"))
     original_no = clean(original_entry.get("bill_no"))
@@ -101,54 +78,32 @@ def find_verified_successor_bill(
         return None
 
     try:
-        relation_nos, evidence_urls = likms_successor.fetch_likms_successor_bill_nos(
+        relation_ids, evidence_urls = likms_successor.fetch_likms_successor_bill_ids(
             session,
             original_bill_id,
         )
     except Exception as exc:
-        print(f"[WARN] LIKMS 대안정보 관계조회 실패: {original_no} / {exc}")
+        print(f"[WARN] LIKMS selRefBillId 관계조회 실패: {original_no} / {exc}")
         return None
 
     print(
-        f"[INFO] LIKMS 대안정보 원시 의안번호: {original_no} / {relation_nos or '-'} / "
+        f"[INFO] LIKMS 공식 참조 BILL_ID: {original_no} / {relation_ids or '-'} / "
         f"근거URL={evidence_urls}"
     )
 
     validated: List[Dict] = []
-    for bill_no in relation_nos:
-        if bill_no == original_no:
-            continue
-        row = _exact_api_row(session, bill_no)
+    for relation_id in relation_ids:
+        row = _exact_api_row_by_id(session, relation_id)
         if not row:
-            print(f"[INFO] LIKMS 관계번호 API 미확인으로 제외: {bill_no}")
+            print(f"[INFO] LIKMS 참조 BILL_ID API 미확인으로 제외: {relation_id}")
             continue
         if not _valid_relation_row(row, watched_law, original_no):
             print(
-                f"[INFO] LIKMS 관계번호 법률명/대안 정체성 불일치로 제외: "
-                f"{bill_no} / {clean(row.get('BILL_NAME') or row.get('BILL_NM'))}"
+                f"[INFO] LIKMS 참조 BILL_ID 법률명/대안 정체성 불일치로 제외: "
+                f"{relation_id} / {clean(row.get('BILL_NAME') or row.get('BILL_NM'))}"
             )
             continue
         validated.append(row)
-
-    # Optional candidate-list corroboration. It must never create a successor by itself.
-    anchor = (
-        monitor.parse_date(current_lifecycle.get("committee_process_date"))
-        or monitor.parse_date(current_lifecycle.get("plenary_date"))
-        or monitor.parse_date(original_entry.get("proposal_date"))
-    )
-    candidate_nos = []
-    if anchor:
-        try:
-            candidates = alternative_successor.fetch_candidate_alternatives(session, watched_law, anchor)
-            candidate_nos = [clean(c.get("bill_no")) for c in candidates if clean(c.get("bill_no"))]
-            print(f"[INFO] 보조 후보목록: {original_no} / {candidate_nos or '-'}")
-        except Exception as exc:
-            print(f"[WARN] 보조 후보목록 조회 실패(승계판정 영향 없음): {original_no} / {exc}")
-
-    unique = {}
-    for row in validated:
-        unique[clean(row.get("BILL_NO"))] = row
-    validated = list(unique.values())
 
     if len(validated) != 1:
         print(
@@ -157,15 +112,26 @@ def find_verified_successor_bill(
         )
         return None
 
-    row = validated[0]
-    successor = _row_to_successor(row, "likms_alternative_info")
-    if not successor.get("bill_id"):
-        print(f"[WARN] 후속 대안 BILL_ID 없음: {successor.get('bill_no')}")
-        return None
+    successor = _row_to_successor(validated[0])
 
-    corroborated = successor.get("bill_no") in candidate_nos if candidate_nos else False
+    # Candidate discovery is now only a non-blocking corroboration signal.
+    corroborated = False
+    anchor = (
+        monitor.parse_date(current_lifecycle.get("committee_process_date"))
+        or monitor.parse_date(current_lifecycle.get("plenary_date"))
+        or monitor.parse_date(original_entry.get("proposal_date"))
+    )
+    if anchor:
+        try:
+            candidates = alternative_successor.fetch_candidate_alternatives(session, watched_law, anchor)
+            candidate_nos = [clean(c.get("bill_no")) for c in candidates if clean(c.get("bill_no"))]
+            corroborated = successor.get("bill_no") in candidate_nos
+            print(f"[INFO] 보조 후보교차: {original_no} / {candidate_nos or '-'} / match={corroborated}")
+        except Exception as exc:
+            print(f"[WARN] 보조 후보목록 조회 실패(승계판정 영향 없음): {original_no} / {exc}")
+
     print(
         f"[PASS] 공식 대안관계 확정: {original_no} -> {successor.get('bill_no')} / "
-        f"LIKMS 대안정보 + 국회 API 정확일치 / 보조후보교차={corroborated}"
+        f"LIKMS selRefBillId + 국회 API BILL_ID 정확일치 / 보조후보교차={corroborated}"
     )
     return successor
