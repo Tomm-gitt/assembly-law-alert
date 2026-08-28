@@ -4,12 +4,11 @@ from datetime import datetime
 import requests
 
 import status_monitor
-from alternative_successor import (
-    is_alternative_reflection_result,
-    register_successor,
-)
+from alternative_successor import is_alternative_reflection_result
 from post_plenary import fetch_post_plenary_status
+from successor_operations import register_verified_successor
 from successor_resolution import find_verified_successor_bill
+from successor_state import escalation_due, mark_escalated, mark_pending
 
 # 실제 알림은 핵심 단계만 사용한다.
 status_monitor.MILESTONES = [
@@ -75,6 +74,29 @@ def _first_successor_changes(current):
     return changes
 
 
+def _pending_change(first_notice: bool):
+    if first_notice:
+        return {
+            "field": "alternative_successor_pending",
+            "label": "대안반영폐기 → 공식 대안번호 확인 필요",
+            "old": "",
+            "new": "LIKMS 공식 관계 미확정 · 매일 재확인",
+        }
+    return None
+
+
+def _escalation_change(entry, now):
+    if not escalation_due(entry, now):
+        return None
+    mark_escalated(entry, now)
+    return {
+        "field": "alternative_successor_unresolved_14d",
+        "label": "대안반영폐기 후속대안 14일 미확정",
+        "old": "공식 대안 연결 대기",
+        "new": "14일 경과 · 공식 관계 계속 재확인",
+    }
+
+
 def main() -> int:
     seen = status_monitor.monitor.load_seen()
     if not seen:
@@ -103,11 +125,20 @@ def main() -> int:
             current = status_monitor.merge_snapshot(previous, current_raw)
             changes = status_monitor.detect_changes(previous, current) if previous else []
 
+            # 이미 후속 대안으로 승계된 원의안은 상태만 갱신하고 이후 단계 알림은 보내지 않는다.
+            # 이후 알림은 successor 의안번호를 기준으로만 이어간다.
+            if entry.get("alternative_reflection"):
+                changes = []
+                print(
+                    f"[INFO] 승계 완료 원의안 상태알림 억제: {entry.get('bill_no')} → "
+                    f"{entry.get('tracking_continued_as') or entry.get('successor_bill_no') or '-'}"
+                )
+
             # 대안반영폐기 감지 → LIKMS의 명시적 selRefBillId 관계를 국회 API로
             # 정확 재검증한 경우에만 위원회 대안으로 자동승계한다.
-            # 동일 법률·시기 후보탐색은 보조 교차검증일 뿐 자동승계 근거가 아니다.
             # status_tracking=true인 원 의안만 이 경로에 들어오므로 제외된 의안은 승계하지 않는다.
-            if _alternative_reflected(current_raw) and not entry.get("alternative_reflection"):
+            elif _alternative_reflected(current_raw):
+                entry["status"] = "대안반영폐기"
                 try:
                     successor = find_verified_successor_bill(session, entry, current_raw)
                 except Exception as exc:
@@ -115,44 +146,38 @@ def main() -> int:
                     print(f"[WARN] 공식 위원회 대안 관계조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
 
                 if successor:
-                    successor_entry = register_successor(seen, bill_id, entry, successor, now)
+                    successor_entry, should_alert = register_verified_successor(
+                        seen, bill_id, entry, successor, now
+                    )
                     successor_no = successor_entry.get("bill_no") or successor.get("bill_no")
                     successor_name = successor_entry.get("bill_name") or successor.get("bill_name")
-                    changes.append({
-                        "field": "alternative_successor",
-                        "label": "대안반영폐기 → 위원회 대안 자동승계",
-                        "old": "",
-                        "new": f"의안번호 {successor_no} · {successor_name}",
-                    })
+                    # 대안반영폐기 시점에는 원의안의 다른 단계변경보다 승계 이벤트만 알린다.
+                    changes = []
+                    if should_alert:
+                        changes.append({
+                            "field": "alternative_successor",
+                            "label": "대안반영폐기 → 위원회 대안 자동승계",
+                            "old": "",
+                            "new": f"의안번호 {successor_no} · {successor_name}",
+                        })
                     print(
                         f"[INFO] 위원회 대안 자동승계: {entry.get('bill_no')} → "
-                        f"{successor_no} / {successor_name}"
+                        f"{successor_no} / {successor_name} / alert={should_alert}"
                     )
                 else:
-                    entry["alternative_successor_pending"] = True
-                    entry["alternative_successor_last_checked_at"] = now
-                    print(f"[WARN] 대안반영폐기 감지했으나 공식 후속 대안 미확정: {entry.get('bill_no')}")
-
-            # 이전 실행에서 대안이 아직 확인되지 않았다면 매일 LIKMS 공식관계를 다시 확인한다.
-            elif entry.get("alternative_successor_pending") and not entry.get("alternative_reflection"):
-                try:
-                    successor = find_verified_successor_bill(session, entry, current_raw)
-                except Exception as exc:
-                    successor = None
-                    print(f"[WARN] 공식 위원회 대안 관계 재조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
-                entry["alternative_successor_last_checked_at"] = now
-                if successor:
-                    successor_entry = register_successor(seen, bill_id, entry, successor, now)
-                    entry.pop("alternative_successor_pending", None)
-                    successor_no = successor_entry.get("bill_no") or successor.get("bill_no")
-                    successor_name = successor_entry.get("bill_name") or successor.get("bill_name")
-                    changes.append({
-                        "field": "alternative_successor",
-                        "label": "위원회 대안 자동승계",
-                        "old": "대안 연결 대기",
-                        "new": f"의안번호 {successor_no} · {successor_name}",
-                    })
-                    print(f"[INFO] 위원회 대안 공식관계 재확인 성공: {entry.get('bill_no')} → {successor_no}")
+                    first_notice = mark_pending(entry, now)
+                    pending_change = _pending_change(first_notice)
+                    escalation_change = _escalation_change(entry, now)
+                    # pending 상태에서는 원의안의 일반 단계변경 대신 해결상태만 알린다.
+                    changes = []
+                    if pending_change:
+                        changes.append(pending_change)
+                    if escalation_change:
+                        changes.append(escalation_change)
+                    print(
+                        f"[WARN] 대안반영폐기 감지했으나 공식 후속 대안 미확정: "
+                        f"{entry.get('bill_no')} / first_notice={first_notice}"
+                    )
 
             # 과거 의안이 앞으로 정부이송 단계에서 처음 발견된 경우 그 이벤트만 1회 알림한다.
             if not previous and entry.get("late_stage_discovered_event") == "정부이송":
@@ -163,7 +188,14 @@ def main() -> int:
                         "label": "정부이송",
                         "old": "",
                         "new": transfer_date,
-                    }] + [c for c in changes if c.get("field") == "alternative_successor"]
+                    }] + [
+                        c for c in changes
+                        if c.get("field") in {
+                            "alternative_successor",
+                            "alternative_successor_pending",
+                            "alternative_successor_unresolved_14d",
+                        }
+                    ]
 
             # 자동승계된 위원회 대안은 첫 조회에서도 이미 진행된 후속 핵심단계를 알린다.
             if not previous and entry.get("successor_tracking_started_at"):
@@ -185,6 +217,10 @@ def main() -> int:
                         "stage": (
                             "위원회 대안 자동승계"
                             if any(c.get("field") == "alternative_successor" for c in changes)
+                            else "공식 대안번호 확인 필요"
+                            if any(c.get("field") == "alternative_successor_pending" for c in changes)
+                            else "후속대안 14일 미확정"
+                            if any(c.get("field") == "alternative_successor_unresolved_14d" for c in changes)
                             else status_monitor.highest_stage(current)
                         ),
                         "changes": changes,
