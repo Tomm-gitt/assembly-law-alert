@@ -107,15 +107,37 @@ def send_new_bills(bills: List[Dict]) -> None:
         )
 
 
-def send_status_alerts(alerts: List[Dict]) -> None:
+def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
+    """Sync status changes to the hub and return only alerts still eligible for Telegram.
+
+    The hub is authoritative for Assembly tracking. An X judgment sets the hub
+    tracking state to '추적중단', and the hub responds with
+    ASSEMBLY_TRACKING_STOPPED when later status changes arrive. Those alerts are
+    deliberately excluded from the returned list.
+    """
     if not alerts:
-        return
+        return []
+
+    telegram_eligible: List[Dict] = []
 
     for alert in alerts:
         result = _post(build_status_payload(alert))
+        action = _clean(result.get("action"))
+        identity = _clean(alert.get("bill_no")) or _clean(alert.get("bill_id"))
+
         print(
             "[INFO] 통합 허브 상태변경 전송 완료: "
-            f"{_clean(alert.get('bill_no')) or _clean(alert.get('bill_id'))} / "
-            f"{_clean(alert.get('stage'))} / "
-            f"{result.get('action', result.get('ok'))}"
+            f"{identity} / {_clean(alert.get('stage'))} / "
+            f"{action or result.get('ok')}"
         )
+
+        if action == "ASSEMBLY_TRACKING_STOPPED":
+            print(
+                "[INFO] 허브 X 판정(추적중단) 의안 - 상태변경 Telegram 제외: "
+                f"{identity}"
+            )
+            continue
+
+        telegram_eligible.append(alert)
+
+    return telegram_eligible
