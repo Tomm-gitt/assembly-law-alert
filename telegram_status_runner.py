@@ -10,16 +10,23 @@ _original_send_email = status_monitor.send_email
 def send_email_telegram_and_hub(alerts):
     _original_send_email(alerts)
 
-    # 상태변경 알림은 허브의 단계변경 전용 메시지 기능을 붙이기 전까지
-    # 기존 Telegram을 유지해 알림 공백이 생기지 않게 한다.
-    telegram_notify.send_status_alerts(alerts)
-
+    # 국회 상태변경 Telegram은 허브 판정상태를 최종 기준으로 사용한다.
+    # X 판정(추적중단) 의안은 허브가 ASSEMBLY_TRACKING_STOPPED를 반환하므로
+    # Telegram 발송 대상에서 제외한다.
     try:
-        hub_notify.send_status_alerts(alerts)
+        telegram_eligible = hub_notify.send_status_alerts(alerts)
     except Exception as exc:
-        # 상태변경 메일/Telegram은 이미 정상 발송되었으므로
-        # 허브 동기화 실패만 경고하고 운영 모니터 자체는 실패시키지 않는다.
-        print(f"[WARN] 통합 허브 상태변경 동기화 실패: {exc}")
+        # 허브 상태를 확인할 수 없는 경우 X 의안에 잘못 알림을 보내지 않도록
+        # fail-closed: 상태변경 Telegram은 보내지 않는다.
+        # 이메일은 이미 발송되었고 모니터 자체는 계속 정상 종료한다.
+        print(f"[WARN] 통합 허브 판정상태 확인 실패 - 상태변경 Telegram 생략: {exc}")
+        return
+
+    if not telegram_eligible:
+        print("[INFO] 허브 판정 기준 상태변경 Telegram 발송 대상이 없습니다.")
+        return
+
+    telegram_notify.send_status_alerts(telegram_eligible)
 
 
 status_monitor.send_email = send_email_telegram_and_hub
