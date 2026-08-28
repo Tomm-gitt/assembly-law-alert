@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Iterable, List, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -31,38 +31,29 @@ def _headers(referer: str = "") -> Dict[str, str]:
 
 
 def _get(session: requests.Session, url: str, *, params=None, referer: str = "") -> requests.Response:
-    response = session.get(
-        url,
-        params=params,
-        headers=_headers(referer),
-        timeout=30,
-        allow_redirects=True,
-    )
+    response = session.get(url, params=params, headers=_headers(referer), timeout=30, allow_redirects=True)
     response.raise_for_status()
     response.encoding = response.apparent_encoding or response.encoding or "utf-8"
     return response
 
 
 def _post(session: requests.Session, url: str, *, data=None, referer: str = "") -> requests.Response:
-    response = session.post(
-        url,
-        data=data,
-        headers=_headers(referer),
-        timeout=30,
-        allow_redirects=True,
-    )
+    response = session.post(url, data=data, headers=_headers(referer), timeout=30, allow_redirects=True)
     response.raise_for_status()
     response.encoding = response.apparent_encoding or response.encoding or "utf-8"
     return response
 
 
-def _bill_numbers(text: str, allowed: Set[str]) -> Set[str]:
+def _bill_numbers(text: str, allowed: Optional[Set[str]] = None) -> Set[str]:
     if not text:
         return set()
-    return {m.group(1) for m in BILL_NO_RE.finditer(text) if m.group(1) in allowed}
+    values = {m.group(1) for m in BILL_NO_RE.finditer(text)}
+    if allowed:
+        values &= allowed
+    return values
 
 
-def _alternative_context_numbers(html_text: str, allowed: Set[str]) -> Set[str]:
+def _alternative_context_numbers(html_text: str, allowed: Optional[Set[str]] = None) -> Set[str]:
     soup = BeautifulSoup(html_text, "html.parser")
     found: Set[str] = set()
 
@@ -91,8 +82,7 @@ def _discover_alt_related_urls(base_url: str, html_text: str) -> List[str]:
         raw = clean(raw)
         if not raw:
             return
-        candidates = URL_RE.findall(raw)
-        for candidate in candidates:
+        for candidate in URL_RE.findall(raw):
             candidate = candidate.replace("&amp;", "&").strip("'\" ")
             absolute = urljoin(base_url, candidate)
             parsed = urlparse(absolute)
@@ -128,27 +118,30 @@ def _discover_alt_related_urls(base_url: str, html_text: str) -> List[str]:
 
 def _consume_response(
     response: requests.Response,
-    allowed: Set[str],
     matched: Set[str],
     evidence_urls: List[str],
     *,
     dedicated: bool = False,
 ) -> None:
     evidence_urls.append(response.url)
-    matched.update(_alternative_context_numbers(response.text, allowed))
+    matched.update(_alternative_context_numbers(response.text))
     if dedicated:
         body_text = BeautifulSoup(response.text, "html.parser").get_text(" ", strip=True)
-        matched.update(_bill_numbers(body_text, allowed))
+        matched.update(_bill_numbers(body_text))
 
 
 def fetch_likms_successor_bill_nos(
     session: requests.Session,
     original_bill_id: str,
-    candidate_bill_nos: Iterable[str],
+    candidate_bill_nos: Iterable[str] = (),
 ) -> Tuple[List[str], List[str]]:
+    """Read the official LIKMS alternative-information surface first.
+
+    The optional candidate list is only a downstream filter/corroboration aid. Relationship
+    discovery itself does not depend on the 국민참여입법센터 candidate list.
+    """
     original_bill_id = clean(original_bill_id)
-    allowed = {clean(x) for x in candidate_bill_nos if clean(x)}
-    if not original_bill_id or not allowed:
+    if not original_bill_id:
         return [], []
 
     detail_response = _get(
@@ -159,10 +152,8 @@ def fetch_likms_successor_bill_nos(
     detail_url = detail_response.url
     evidence_urls: List[str] = []
     matched: Set[str] = set()
-    _consume_response(detail_response, allowed, matched, evidence_urls)
+    _consume_response(detail_response, matched, evidence_urls)
 
-    # Current LIKMS source exposes suggestBillPage.do as the alternative-info tab.
-    # Try both observed server conventions: query-string and form POST.
     direct_attempts = [
         ("GET", {"billId": original_bill_id}),
         ("GET", {"billId": original_bill_id, "currMenuNo": "2600044"}),
@@ -179,14 +170,13 @@ def fetch_likms_successor_bill_nos(
             print(f"[WARN] LIKMS 대안정보 직접조회 실패: {method} / {payload} / {exc}")
             continue
         before = set(matched)
-        _consume_response(response, allowed, matched, evidence_urls, dedicated=True)
+        _consume_response(response, matched, evidence_urls, dedicated=True)
         print(
             f"[INFO] LIKMS 대안정보 직접조회: {method} / {payload} / "
             f"status={response.status_code} / len={len(response.text)} / "
             f"new_matches={sorted(matched - before)}"
         )
 
-    # Also follow alternative-related routes discovered from the official detail source.
     for url in _discover_alt_related_urls(detail_url, detail_response.text):
         if url.startswith(LIKMS_SUGGEST_URL):
             continue
@@ -195,8 +185,11 @@ def fetch_likms_successor_bill_nos(
         except Exception as exc:
             print(f"[WARN] LIKMS 대안정보 보조경로 조회 실패: {url} / {exc}")
             continue
-        _consume_response(response, allowed, matched, evidence_urls)
+        _consume_response(response, matched, evidence_urls)
 
+    candidate_set = {clean(x) for x in candidate_bill_nos if clean(x)}
+    if candidate_set:
+        matched &= candidate_set
     return sorted(matched), list(dict.fromkeys(evidence_urls))
 
 
