@@ -10,6 +10,12 @@ on:
       - 'likms_successor_regression_test.py'
       - '.github/workflows/test-likms-successor-regression.yml'
   workflow_dispatch:
+    inputs:
+      original_bill_no:
+        description: '대안반영폐기 원의안번호 (예: 2203012)'
+        required: true
+        default: '2203012'
+        type: string
 
 jobs:
   regression:
@@ -30,9 +36,10 @@ jobs:
       - name: Compile production successor modules
         run: python -m py_compile likms_successor.py successor_resolution.py status_alert_runner.py alternative_successor.py
 
-      - name: Verify two official successor relationships
+      - name: Verify official successor relationship
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+          TEST_ORIGINAL_BILL_NO: ${{ inputs.original_bill_no }}
         run: python likms_successor_regression_test.py
 
       - name: Prove production state unchanged
