@@ -1,4 +1,2 @@
 requests==2.32.3
 beautifulsoup4==4.12.3
-pypdf==5.9.0
-olefile==0.47
