@@ -2,8 +2,6 @@ name: "[운영] 국회 법률안 자동모니터링"
 
 on:
   schedule:
-    # GitHub scheduled workflows can start late under load, so run several staggered backups
-    # before the 08:30 KST reporting deadline. Times below are KST on the same morning.
     - cron: '17 20 * * *'  # 05:17 KST
     - cron: '47 20 * * *'  # 05:47 KST
     - cron: '17 21 * * *'  # 06:17 KST
@@ -13,12 +11,12 @@ on:
   workflow_dispatch:
     inputs:
       force_send_recent:
-        description: '최근 7일 매칭 건을 테스트 메일/텔레그램으로 강제 발송'
+        description: '최근 7일 매칭 건을 테스트 메일/허브로 강제 발송'
         required: false
         default: false
         type: boolean
       force_send_status_test:
-        description: '추적 의안의 현재 진행상태를 테스트 메일/텔레그램으로 강제 발송'
+        description: '추적 의안의 현재 진행상태를 테스트 메일/허브로 강제 발송'
         required: false
         default: false
         type: boolean
@@ -60,8 +58,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
         run: python run_with_network_retry.py telegram_enriched_runner.py
 
@@ -76,8 +73,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
         run: python run_with_network_retry.py telegram_status_runner.py
 
@@ -87,9 +83,8 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python law_effective_monitor.py
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
+        run: python hub_law_effective_runner.py
 
       - name: Commit updated state
         run: |
