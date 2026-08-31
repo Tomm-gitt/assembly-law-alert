@@ -32,32 +32,50 @@ def build_lawmaking_url(bill: Dict) -> str:
 
 
 def _find_date(text: str, label: str) -> str:
+    # Official pages change whitespace/table markup frequently. Search a bounded
+    # window after the semantic label and accept dot/slash/dash or Korean date
+    # separators. The bounded window prevents accidentally taking a later date.
     match = re.search(
-        rf"{re.escape(label)}\s*[:：]?\s*(\d{{4}}[.\-/]\s*\d{{1,2}}[.\-/]\s*\d{{1,2}}\.?)",
+        rf"{re.escape(label)}(?P<gap>.{{0,100}}?)(?P<date>\d{{4}}\s*(?:[.\-/년])\s*\d{{1,2}}\s*(?:[.\-/월])\s*\d{{1,2}}\s*(?:[.일])?)",
         text,
+        flags=re.DOTALL,
     )
-    return normalize_date(match.group(1)) if match else ""
+    return normalize_date(match.group("date")) if match else ""
 
 
 def _find_number(text: str, label: str) -> str:
-    match = re.search(rf"{re.escape(label)}\s*[:：]?\s*제?\s*(\d+)", text)
+    match = re.search(
+        rf"{re.escape(label)}.{{0,60}}?제?\s*(\d+)",
+        text,
+        flags=re.DOTALL,
+    )
     return match.group(1) if match else ""
+
+
+def _find_promulgated_law(text: str) -> str:
+    match = re.search(r"공포법률.{0,40}?(?:법률\s*)?([^\n|]{2,120})", text, flags=re.DOTALL)
+    if not match:
+        return ""
+    value = clean(match.group(1))
+    value = re.split(r"(?:공포안|바로보기|정부이송|기본정보)", value, maxsplit=1)[0]
+    return clean(value)
 
 
 def _parse_status_html(html_text: str, source: str, url: str) -> Dict[str, str]:
     soup = BeautifulSoup(html_text, "html.parser")
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
-    text = "\n".join(line.strip() for line in soup.get_text("\n", strip=True).splitlines() if line.strip())
 
-    government_transfer_date = _find_date(text, "정부이송일")
-    promulgation_date = _find_date(text, "공포일자")
-    promulgation_no = _find_number(text, "공포번호")
+    # Keep both line-oriented and flattened text. Some official pages put labels
+    # and values in separate table cells; others render them on one line.
+    lines = [line.strip() for line in soup.get_text("\n", strip=True).splitlines() if line.strip()]
+    line_text = "\n".join(lines)
+    flat_text = " ".join(lines)
 
-    promulgated_law = ""
-    law_match = re.search(r"공포법률\s*(?:법률\s*)?([^\n]+)", text)
-    if law_match:
-        promulgated_law = clean(law_match.group(1))
+    government_transfer_date = _find_date(line_text, "정부이송일") or _find_date(flat_text, "정부이송일")
+    promulgation_date = _find_date(line_text, "공포일자") or _find_date(flat_text, "공포일자")
+    promulgation_no = _find_number(line_text, "공포번호") or _find_number(flat_text, "공포번호")
+    promulgated_law = _find_promulgated_law(line_text) or _find_promulgated_law(flat_text)
 
     return {
         "government_transfer_date": government_transfer_date,
@@ -67,6 +85,22 @@ def _parse_status_html(html_text: str, source: str, url: str) -> Dict[str, str]:
         "post_plenary_source": source,
         "post_plenary_url": url,
     }
+
+
+def _merge_result(base: Dict[str, str], incoming: Dict[str, str]) -> Dict[str, str]:
+    merged = dict(base)
+    for key in (
+        "government_transfer_date",
+        "promulgation_date",
+        "promulgation_no",
+        "promulgated_law",
+    ):
+        if not clean(merged.get(key)) and clean(incoming.get(key)):
+            merged[key] = incoming[key]
+    if not clean(merged.get("post_plenary_source")) and clean(incoming.get("post_plenary_source")):
+        merged["post_plenary_source"] = incoming["post_plenary_source"]
+        merged["post_plenary_url"] = incoming.get("post_plenary_url", "")
+    return merged
 
 
 def fetch_post_plenary_status(
@@ -84,11 +118,13 @@ def fetch_post_plenary_status(
     )
 
     try:
+        # 국민참여입법센터 상세는 정부이송/공포정보를 명시적으로 제공하므로
+        # 후속단계의 1순위 원천으로 사용하고, LIKMS는 보완 원천으로 사용한다.
         urls = [
-            ("국회 의안정보시스템", build_likms_url(bill)),
             ("국민참여입법센터", build_lawmaking_url(bill)),
+            ("국회 의안정보시스템", build_likms_url(bill)),
         ]
-        fallback = {}
+        combined: Dict[str, str] = {}
         for source, url in urls:
             if not url:
                 continue
@@ -97,13 +133,12 @@ def fetch_post_plenary_status(
                 response.raise_for_status()
                 response.encoding = response.apparent_encoding or response.encoding or "utf-8"
                 result = _parse_status_html(response.text, source, url)
-                if result.get("government_transfer_date") or result.get("promulgation_date"):
-                    return result
-                if not fallback:
-                    fallback = result
+                combined = _merge_result(combined, result)
+                if combined.get("government_transfer_date") and combined.get("promulgation_date") and combined.get("promulgation_no"):
+                    break
             except Exception as exc:
                 print(f"[WARN] {source} 후속단계 조회 실패: {bill.get('bill_no') or bill.get('bill_id')} / {exc}")
-        return fallback
+        return combined
     finally:
         if own_session:
             session.close()
