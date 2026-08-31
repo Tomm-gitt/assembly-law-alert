@@ -4,22 +4,12 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 import hub_notify
-import telegram_notify
 
 KST = ZoneInfo("Asia/Seoul")
 
 
 def clean(value):
     return str(value or "").strip()
-
-
-def require_telegram_secrets():
-    token = clean(os.getenv("TELEGRAM_BOT_TOKEN"))
-    chat_id = clean(os.getenv("TELEGRAM_CHAT_ID"))
-    if not token or not chat_id:
-        raise RuntimeError(
-            "Telegram 테스트에 필요한 TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID Secret이 없습니다."
-        )
 
 
 def base_item(source_id, title, bill_no):
@@ -63,18 +53,14 @@ def register(case_id):
 
 
 def send_operational_status(alert):
-    require_telegram_secrets()
     eligible = hub_notify.send_status_alerts([alert])
     if not eligible:
         raise RuntimeError(
-            "허브가 상태변경 Telegram 발송을 차단했습니다. register 단계의 O 판정 여부를 확인하세요."
+            "허브가 상태변경 처리를 차단했습니다. register 단계의 O 판정 여부를 확인하세요."
         )
-    telegram_notify.send_status_alerts(eligible)
 
 
 def continue_lifecycle(case_id):
-    require_telegram_secrets()
-
     source_id = f"HUBTEST_{case_id}_ORIGINAL"
     bill_no = f"TEST-{case_id}"
     title = "[허브통합테스트] 소비자기본법 일부개정법률안"
@@ -103,7 +89,7 @@ def continue_lifecycle(case_id):
             "test_mode": True,
         }
         send_operational_status(alert)
-        print(f"[PASS] 허브 + 상태변경 Telegram: {stage}")
+        print(f"[PASS] 허브 상태변경 처리: {stage}")
         time.sleep(1)
 
     successor_id = f"HUBTEST_{case_id}_ALT"
@@ -126,7 +112,8 @@ def continue_lifecycle(case_id):
         "test_mode": True,
     }
     send_operational_status(successor_alert)
-    print("[PASS] 후속 대안도 원안 hub_source_id로 허브/Telegram 상태변경 처리")
+    print("[PASS] 후속 대안도 원안 hub_source_id로 허브 상태변경 처리")
+    print("[CHECK] 모든 상태변경 Telegram은 허브 알림방에만 와야 합니다.")
     print("[CHECK] 후속 대안에서 O/X 재판정 메시지가 오면 실패입니다.")
     print("[PASS] 전체 흐름: 발의 → 소관위 → 법사위 → 본회의 → 정부이송 → 대안반영폐기 → 대안 자동승계")
 
