@@ -1,0 +1,44 @@
+name: "[테스트] 실데이터 허브 E2E"
+
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: 'register=실제 과거의안 2건 등록 / continue=O 판정 후 실제 데이터 lifecycle replay'
+        required: true
+        default: 'register'
+        type: choice
+        options:
+          - register
+          - continue
+      case_id:
+        description: 'register/continue에 동일하게 입력'
+        required: true
+        default: '20260831HIST1'
+        type: string
+
+jobs:
+  historical-hub-realdata-e2e:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run historical real-data hub E2E
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+          LAW_API_OC: ${{ secrets.LAW_API_OC }}
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
+          TEST_PHASE: ${{ inputs.phase }}
+          TEST_CASE_ID: ${{ inputs.case_id }}
+        run: python historical_hub_realdata_e2e.py
