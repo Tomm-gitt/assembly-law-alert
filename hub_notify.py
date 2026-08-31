@@ -29,6 +29,22 @@ def _normalize_date(value) -> str:
     return datetime.now(KST).strftime("%Y-%m-%d")
 
 
+def _extract_action(data: Dict) -> str:
+    action = _clean(data.get("action"))
+    if action:
+        return action
+    raw = _clean(data.get("raw"))
+    for candidate in (
+        "ASSEMBLY_TRACKING_STOPPED",
+        "ASSEMBLY_STAGE_CHANGED",
+        "UNCHANGED",
+        "INSERTED",
+    ):
+        if candidate in raw:
+            return candidate
+    return ""
+
+
 def _post(payload: Dict) -> Dict:
     url = _hub_url()
     last_error = None
@@ -59,7 +75,7 @@ def build_new_bill_payload(bill: Dict) -> Dict:
     return {
         "sourceOrg": "국회",
         "sourceType": "신규 법률안",
-        "sourceId": _clean(bill.get("bill_id")),
+        "sourceId": _clean(bill.get("hub_source_id") or bill.get("bill_id")),
         "title": _clean(bill.get("bill_name")),
         "publishedDate": _normalize_date(bill.get("proposal_date")),
         "originalUrl": _clean(bill.get("detail_link")).replace("http://", "https://", 1),
@@ -82,7 +98,7 @@ def build_status_payload(alert: Dict) -> Dict:
     return {
         "sourceOrg": "국회",
         "sourceType": "법률안 진행상태",
-        "sourceId": _clean(alert.get("bill_id")),
+        "sourceId": _clean(alert.get("hub_source_id") or alert.get("bill_id")),
         "title": _clean(alert.get("bill_name")),
         "publishedDate": _normalize_date(alert.get("proposal_date")),
         "originalUrl": _clean(alert.get("detail_link")).replace("http://", "https://", 1),
@@ -100,10 +116,11 @@ def send_new_bills(bills: List[Dict]) -> None:
 
     for bill in bills:
         result = _post(build_new_bill_payload(bill))
+        action = _extract_action(result)
         print(
             "[INFO] 통합 허브 신규 의안 전송 완료: "
             f"{_clean(bill.get('bill_no')) or _clean(bill.get('bill_id'))} / "
-            f"{result.get('action', result.get('ok'))}"
+            f"{action or result.get('ok')}"
         )
 
 
@@ -122,7 +139,7 @@ def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
 
     for alert in alerts:
         result = _post(build_status_payload(alert))
-        action = _clean(result.get("action"))
+        action = _extract_action(result)
         identity = _clean(alert.get("bill_no")) or _clean(alert.get("bill_id"))
 
         print(

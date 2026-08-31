@@ -1,106 +1,72 @@
-import json
 import os
 import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-import requests
+import hub_notify
+import telegram_notify
 
 KST = ZoneInfo("Asia/Seoul")
-DEFAULT_HUB_WEB_APP_URL = (
-    "https://script.google.com/macros/s/"
-    "AKfycbzMFcotCh5GjQAQSPok0JAuve75tHQAci3OjUFoj1Xjck3q6vR4JX0uQXwMMeMYrlYVxA/exec"
-)
 
 
 def clean(value):
     return str(value or "").strip()
 
 
-def hub_url():
-    return clean(os.getenv("HUB_WEB_APP_URL")) or DEFAULT_HUB_WEB_APP_URL
-
-
-def post(payload):
-    response = requests.post(hub_url(), json=payload, timeout=30, allow_redirects=True)
-    response.raise_for_status()
-    try:
-        data = response.json()
-    except ValueError:
-        data = {"ok": True, "raw": response.text}
-    if data.get("ok") is False:
-        raise RuntimeError(f"허브 처리 실패: {data}")
-    return data
-
-
-def hub_action(result):
-    """Return hub action from either JSON or Apps Script HtmlService response."""
-    direct = clean(result.get("action"))
-    if direct:
-        return direct
-
-    raw = clean(result.get("raw"))
-    # The deployed hub intentionally returns HtmlService to avoid the Apps Script
-    # POST redirect issue. The JSON payload is embedded inside that HTML, so the
-    # action token itself remains searchable even though quotes are escaped.
-    for action in (
-        "ASSEMBLY_TRACKING_STOPPED",
-        "ASSEMBLY_STAGE_CHANGED",
-        "UNCHANGED",
-        "INSERTED",
-    ):
-        if action in raw:
-            return action
-    return ""
-
-
-def base_payload(source_id, source_type, title, stage, bill_no):
+def base_item(source_id, title, bill_no):
     today = datetime.now(KST).strftime("%Y-%m-%d")
     return {
-        "sourceOrg": "국회",
-        "sourceType": source_type,
-        "sourceId": source_id,
-        "title": title,
-        "publishedDate": today,
-        "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=" + source_id,
-        "currentStage": stage,
-        "stageDate": today,
-        "matchedLaw": "소비자기본법",
-        "billNo": bill_no,
-        "proposer": "허브 통합 테스트",
+        "bill_id": source_id,
+        "bill_name": title,
+        "bill_no": bill_no,
+        "proposal_date": today,
+        "detail_link": "https://likms.assembly.go.kr/bill/billDetail.do?billId=" + source_id,
+        "matched_law": "소비자기본법",
         "committee": "정무위원회",
+        "proposer": "허브 통합 테스트",
     }
 
 
 def register(case_id):
     source_id = f"HUBTEST_{case_id}_ORIGINAL"
-    payload = base_payload(
+    bill = base_item(
         source_id,
-        "신규 법률안",
         "[허브통합테스트] 소비자기본법 일부개정법률안",
-        "발의/접수",
         f"TEST-{case_id}",
     )
-    payload["summaryReason"] = "허브 전체 lifecycle 통합 테스트용 원안입니다."
-    payload["summaryMainItems"] = [
+    bill["process_result"] = "발의/접수"
+    bill["proposal_reason_summary"] = "허브 전체 lifecycle 통합 테스트용 원안입니다."
+    bill["main_content_points"] = [
         "발의부터 단계변경까지 동일 의안의 MASTER 행이 유지되는지 확인",
-        "대안반영폐기 후 후속 대안 의안 처리까지 확인",
+        "대안반영 후에도 원안 O 판정과 추적상태가 유지되는지 확인",
     ]
-    result = post(payload)
-    action = hub_action(result)
-    print("[REGISTER] action=", action)
+
+    result = hub_notify._post(hub_notify.build_new_bill_payload(bill))
+    action = hub_notify._extract_action(result)
+    print(f"[REGISTER] action={action}")
     if action != "INSERTED":
         raise RuntimeError(
             f"새 테스트 케이스가 INSERTED 되지 않았습니다(action={action}). 다른 case_id로 다시 실행하세요."
         )
+
     print(f"[PASS] 발의 등록 완료: {source_id}")
     print("[NEXT] Telegram에서 자사관련 O로 판정하고 사유 입력 후 phase=continue 실행")
+
+
+def send_operational_status(alert):
+    eligible = hub_notify.send_status_alerts([alert])
+    if not eligible:
+        raise RuntimeError(
+            "허브가 상태변경 Telegram 발송을 차단했습니다. register 단계의 O 판정 여부를 확인하세요."
+        )
+    telegram_notify.send_status_alerts(eligible)
 
 
 def continue_lifecycle(case_id):
     source_id = f"HUBTEST_{case_id}_ORIGINAL"
     bill_no = f"TEST-{case_id}"
     title = "[허브통합테스트] 소비자기본법 일부개정법률안"
+    base = base_item(source_id, title, bill_no)
 
     stages = [
         "소관위원회 회부",
@@ -111,32 +77,48 @@ def continue_lifecycle(case_id):
     ]
 
     for stage in stages:
-        result = post(base_payload(source_id, "법률안 진행상태", title, stage, bill_no))
-        action = hub_action(result)
-        print(f"[{stage}] action={action}")
-        if action == "ASSEMBLY_TRACKING_STOPPED":
-            raise RuntimeError("원안이 추적중단 상태입니다. register 단계에서 O 판정 여부를 확인하세요.")
-        if action not in ("ASSEMBLY_STAGE_CHANGED", "UNCHANGED"):
-            raise RuntimeError(f"예상하지 못한 허브 응답: {stage} / {action}")
+        alert = {
+            **base,
+            "stage": stage,
+            "changes": [
+                {
+                    "field": "hub_full_lifecycle_test",
+                    "label": stage,
+                    "old": "",
+                    "new": datetime.now(KST).strftime("%Y-%m-%d"),
+                }
+            ],
+            "test_mode": True,
+        }
+        send_operational_status(alert)
+        print(f"[PASS] 허브 + 상태변경 Telegram: {stage}")
         time.sleep(1)
 
+    # 실제 운영의 위원회 대안 자동승계와 동일하게 successor의 실제 bill_id는
+    # 바뀌지만 hub_source_id는 원안의 허브 identity를 계속 사용한다.
     successor_id = f"HUBTEST_{case_id}_ALT"
-    successor = base_payload(
-        successor_id,
-        "대안승계 법률안",
-        "[허브통합테스트] 소비자기본법 일부개정법률안(대안)",
-        "본회의 처리",
-        f"TEST-{case_id}-ALT",
-    )
-    successor["predecessorSourceId"] = source_id
-    successor["summaryReason"] = "원안 대안반영폐기 후 자동 승계되는 후속 대안 테스트입니다."
-    successor["summaryMainItems"] = ["원안의 추적 의사결정이 후속 대안으로 이어지는지 확인"]
-    result = post(successor)
-    action = hub_action(result)
-    print(f"[대안승계] action={action}")
-
-    print("[PASS] 원안 단계 전송 완료: 발의 → 소관위 → 법사위 → 본회의 → 정부이송 → 대안반영폐기")
-    print("[CHECK] 후속 대안은 새 sourceId이므로 MASTER/ASSEMBLY_EVENTS와 Telegram 판정 승계 여부를 확인하세요.")
+    successor_alert = {
+        **base_item(
+            successor_id,
+            "[허브통합테스트] 소비자기본법 일부개정법률안(대안)",
+            f"TEST-{case_id}-ALT",
+        ),
+        "hub_source_id": source_id,
+        "stage": "위원회 대안 자동승계",
+        "changes": [
+            {
+                "field": "alternative_successor",
+                "label": "대안반영폐기 → 위원회 대안 자동승계",
+                "old": bill_no,
+                "new": f"TEST-{case_id}-ALT",
+            }
+        ],
+        "test_mode": True,
+    }
+    send_operational_status(successor_alert)
+    print("[PASS] 후속 대안도 원안 hub_source_id로 허브/Telegram 상태변경 처리")
+    print("[CHECK] 후속 대안에서 O/X 재판정 메시지가 오면 실패입니다.")
+    print("[PASS] 전체 흐름: 발의 → 소관위 → 법사위 → 본회의 → 정부이송 → 대안반영폐기 → 대안 자동승계")
 
 
 def main():
