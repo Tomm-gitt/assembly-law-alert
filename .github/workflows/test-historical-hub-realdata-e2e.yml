@@ -4,15 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       phase:
-        description: 'register=실제 과거의안 2건 등록 / continue=O 판정 후 실제 데이터 lifecycle replay'
+        description: 'register=실제 과거의안 2건 등록 / continue=O 판정 후 전체 replay / post_only=대안 후속 정부이송·공포·시행만 재검증'
         required: true
         default: 'register'
         type: choice
         options:
           - register
           - continue
+          - post_only
       case_id:
-        description: 'register/continue에 동일하게 입력'
+        description: 'register/continue/post_only에 동일하게 입력'
         required: true
         default: '20260831HIST1'
         type: string
@@ -41,4 +42,9 @@ jobs:
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
           TEST_PHASE: ${{ inputs.phase }}
           TEST_CASE_ID: ${{ inputs.case_id }}
-        run: python historical_hub_realdata_e2e.py
+        run: |
+          if [ "$TEST_PHASE" = "post_only" ]; then
+            python historical_post_plenary_repair.py
+          else
+            python historical_hub_realdata_e2e.py
+          fi
