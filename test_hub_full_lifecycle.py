@@ -33,6 +33,27 @@ def post(payload):
     return data
 
 
+def hub_action(result):
+    """Return hub action from either JSON or Apps Script HtmlService response."""
+    direct = clean(result.get("action"))
+    if direct:
+        return direct
+
+    raw = clean(result.get("raw"))
+    # The deployed hub intentionally returns HtmlService to avoid the Apps Script
+    # POST redirect issue. The JSON payload is embedded inside that HTML, so the
+    # action token itself remains searchable even though quotes are escaped.
+    for action in (
+        "ASSEMBLY_TRACKING_STOPPED",
+        "ASSEMBLY_STAGE_CHANGED",
+        "UNCHANGED",
+        "INSERTED",
+    ):
+        if action in raw:
+            return action
+    return ""
+
+
 def base_payload(source_id, source_type, title, stage, bill_no):
     today = datetime.now(KST).strftime("%Y-%m-%d")
     return {
@@ -66,9 +87,12 @@ def register(case_id):
         "대안반영폐기 후 후속 대안 의안 처리까지 확인",
     ]
     result = post(payload)
-    print("[REGISTER]", json.dumps(result, ensure_ascii=False))
-    if clean(result.get("action")) != "INSERTED":
-        raise RuntimeError("새 테스트 케이스가 INSERTED 되지 않았습니다. 다른 case_id로 다시 실행하세요.")
+    action = hub_action(result)
+    print("[REGISTER] action=", action)
+    if action != "INSERTED":
+        raise RuntimeError(
+            f"새 테스트 케이스가 INSERTED 되지 않았습니다(action={action}). 다른 case_id로 다시 실행하세요."
+        )
     print(f"[PASS] 발의 등록 완료: {source_id}")
     print("[NEXT] Telegram에서 자사관련 O로 판정하고 사유 입력 후 phase=continue 실행")
 
@@ -88,8 +112,8 @@ def continue_lifecycle(case_id):
 
     for stage in stages:
         result = post(base_payload(source_id, "법률안 진행상태", title, stage, bill_no))
-        action = clean(result.get("action"))
-        print(f"[{stage}]", json.dumps(result, ensure_ascii=False))
+        action = hub_action(result)
+        print(f"[{stage}] action={action}")
         if action == "ASSEMBLY_TRACKING_STOPPED":
             raise RuntimeError("원안이 추적중단 상태입니다. register 단계에서 O 판정 여부를 확인하세요.")
         if action not in ("ASSEMBLY_STAGE_CHANGED", "UNCHANGED"):
@@ -108,7 +132,8 @@ def continue_lifecycle(case_id):
     successor["summaryReason"] = "원안 대안반영폐기 후 자동 승계되는 후속 대안 테스트입니다."
     successor["summaryMainItems"] = ["원안의 추적 의사결정이 후속 대안으로 이어지는지 확인"]
     result = post(successor)
-    print("[대안승계]", json.dumps(result, ensure_ascii=False))
+    action = hub_action(result)
+    print(f"[대안승계] action={action}")
 
     print("[PASS] 원안 단계 전송 완료: 발의 → 소관위 → 법사위 → 본회의 → 정부이송 → 대안반영폐기")
     print("[CHECK] 후속 대안은 새 sourceId이므로 MASTER/ASSEMBLY_EVENTS와 Telegram 판정 승계 여부를 확인하세요.")
