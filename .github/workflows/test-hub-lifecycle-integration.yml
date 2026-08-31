@@ -1,0 +1,32 @@
+name: "[테스트] 허브 lifecycle 연동"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bill_no:
+        description: '허브에 이미 등록되고 O 판정된 테스트 의안번호'
+        required: true
+        default: '2220774'
+        type: string
+
+jobs:
+  test-hub-lifecycle:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run hub lifecycle integration test
+        env:
+          TEST_BILL_NO: ${{ inputs.bill_no }}
+        run: python test_hub_lifecycle_integration.py
