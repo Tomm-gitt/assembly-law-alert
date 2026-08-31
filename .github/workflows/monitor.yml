@@ -2,12 +2,10 @@ name: "[운영] 국회 법률안 자동모니터링"
 
 on:
   schedule:
-    - cron: '17 20 * * *'  # 05:17 KST
-    - cron: '47 20 * * *'  # 05:47 KST
-    - cron: '17 21 * * *'  # 06:17 KST
-    - cron: '47 21 * * *'  # 06:47 KST
-    - cron: '17 22 * * *'  # 07:17 KST
-    - cron: '47 22 * * *'  # 07:47 KST
+    - cron: '30 21 * * *'  # 06:30 KST
+    - cron: '0 22 * * *'   # 07:00 KST
+    - cron: '30 22 * * *'  # 07:30 KST
+    - cron: '0 23 * * *'   # 08:00 KST
   workflow_dispatch:
     inputs:
       force_send_recent:
