@@ -63,12 +63,12 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
-        run: python telegram_enriched_runner.py
+        run: python run_with_network_retry.py telegram_enriched_runner.py
 
       - name: Discover legacy bills with new late-stage events
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
-        run: python late_stage_discovery.py
+        run: python run_with_network_retry.py late_stage_discovery.py
 
       - name: Run status change monitor
         env:
@@ -79,7 +79,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
-        run: python telegram_status_runner.py
+        run: python run_with_network_retry.py telegram_status_runner.py
 
       - name: Run promulgation and enforcement monitor
         env:
