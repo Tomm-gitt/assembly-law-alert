@@ -43,12 +43,26 @@ def build_lawmaking_url(bill: Dict) -> str:
 
 
 def _find_date(text: str, label: str) -> str:
-    match = re.search(
-        rf"{re.escape(label)}(?P<gap>.{{0,120}}?)(?P<date>\d{{4}}\s*(?:[.\-/년])\s*\d{{1,2}}\s*(?:[.\-/월])\s*\d{{1,2}}\s*(?:[.일])?)",
-        text,
-        flags=re.DOTALL,
-    )
-    return normalize_date(match.group("date")) if match else ""
+    """Find the first calendar date immediately after a semantic label.
+
+    Official pages commonly render dates as `2026. 2. 27.` with whitespace
+    between the dotted components.  Instead of trying to enumerate every date
+    separator combination, inspect only a short window after the label and
+    extract the first year/month/day triple separated by non-digits.
+    """
+    start = text.find(label)
+    if start < 0:
+        return ""
+
+    window = text[start + len(label): start + len(label) + 120]
+    match = re.search(r"(\d{4})\D{1,12}(\d{1,2})\D{1,12}(\d{1,2})", window)
+    if not match:
+        return ""
+
+    year, month, day = (int(value) for value in match.groups())
+    if not (1900 <= year <= 2100 and 1 <= month <= 12 and 1 <= day <= 31):
+        return ""
+    return f"{year:04d}-{month:02d}-{day:02d}"
 
 
 def _find_number(text: str, label: str) -> str:
@@ -110,9 +124,6 @@ def _merge_result(base: Dict[str, str], incoming: Dict[str, str]) -> Dict[str, s
 
 
 def _fetch_lawmaking_html(url: str) -> str:
-    # The lawmaking site sometimes returns a shell page to a bare automation
-    # request. Prime a browser-like session on the section root first so the
-    # detail request receives the same server-side rendering path as a browser.
     with requests.Session() as s:
         s.headers.update(BROWSER_HEADERS)
         try:
@@ -126,8 +137,6 @@ def _fetch_lawmaking_html(url: str) -> str:
             allow_redirects=True,
         )
         response.raise_for_status()
-        # The site is UTF-8. Do not let chardet/apparent_encoding corrupt Korean
-        # semantic labels such as 정부이송일 and 공포일자.
         text = response.content.decode("utf-8", errors="replace")
         print(
             f"[DEBUG] 국민참여입법센터 응답: status={response.status_code} "
