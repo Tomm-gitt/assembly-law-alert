@@ -103,10 +103,17 @@ def build_status_payload(alert: Dict) -> Dict:
         "publishedDate": _normalize_date(alert.get("proposal_date")),
         "originalUrl": _clean(alert.get("detail_link")).replace("http://", "https://", 1),
         "currentStage": _clean(alert.get("stage")) or "발의/접수",
-        "stageDate": datetime.now(KST).strftime("%Y-%m-%d"),
+        "stageDate": _normalize_date(
+            alert.get("stage_date")
+            or alert.get("promulgation_date")
+            or alert.get("enforcement_date")
+        ),
         "matchedLaw": _clean(alert.get("matched_law")),
         "billNo": _clean(alert.get("bill_no")),
         "committee": _clean(alert.get("committee")),
+        "promulgationDate": _normalize_date(alert.get("promulgation_date")) if _clean(alert.get("promulgation_date")) else "",
+        "promulgationNo": _clean(alert.get("promulgation_no")),
+        "enforcementDate": _normalize_date(alert.get("enforcement_date")) if _clean(alert.get("enforcement_date")) else "",
     }
 
 
@@ -125,17 +132,17 @@ def send_new_bills(bills: List[Dict]) -> None:
 
 
 def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
-    """Sync status changes to the hub and return only alerts still eligible for Telegram.
+    """Send Assembly lifecycle events to the hub.
 
-    The hub is authoritative for Assembly tracking. An X judgment sets the hub
-    tracking state to '추적중단', and the hub responds with
-    ASSEMBLY_TRACKING_STOPPED when later status changes arrive. Those alerts are
-    deliberately excluded from the returned list.
+    The hub is authoritative for tracking and Telegram delivery. If an X
+    judgment stopped tracking, the hub returns ASSEMBLY_TRACKING_STOPPED and
+    that item is excluded from the returned list. Collectors never send
+    Telegram directly.
     """
     if not alerts:
         return []
 
-    telegram_eligible: List[Dict] = []
+    accepted: List[Dict] = []
 
     for alert in alerts:
         result = _post(build_status_payload(alert))
@@ -150,11 +157,11 @@ def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
 
         if action == "ASSEMBLY_TRACKING_STOPPED":
             print(
-                "[INFO] 허브 X 판정(추적중단) 의안 - 상태변경 Telegram 제외: "
+                "[INFO] 허브 X 판정(추적중단) 의안 - 후속 알림 제외: "
                 f"{identity}"
             )
             continue
 
-        telegram_eligible.append(alert)
+        accepted.append(alert)
 
-    return telegram_eligible
+    return accepted
