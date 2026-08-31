@@ -13,6 +13,15 @@ def clean(value):
     return str(value or "").strip()
 
 
+def require_telegram_secrets():
+    token = clean(os.getenv("TELEGRAM_BOT_TOKEN"))
+    chat_id = clean(os.getenv("TELEGRAM_CHAT_ID"))
+    if not token or not chat_id:
+        raise RuntimeError(
+            "Telegram 테스트에 필요한 TELEGRAM_BOT_TOKEN 또는 TELEGRAM_CHAT_ID Secret이 없습니다."
+        )
+
+
 def base_item(source_id, title, bill_no):
     today = datetime.now(KST).strftime("%Y-%m-%d")
     return {
@@ -54,6 +63,7 @@ def register(case_id):
 
 
 def send_operational_status(alert):
+    require_telegram_secrets()
     eligible = hub_notify.send_status_alerts([alert])
     if not eligible:
         raise RuntimeError(
@@ -63,6 +73,8 @@ def send_operational_status(alert):
 
 
 def continue_lifecycle(case_id):
+    require_telegram_secrets()
+
     source_id = f"HUBTEST_{case_id}_ORIGINAL"
     bill_no = f"TEST-{case_id}"
     title = "[허브통합테스트] 소비자기본법 일부개정법률안"
@@ -94,8 +106,6 @@ def continue_lifecycle(case_id):
         print(f"[PASS] 허브 + 상태변경 Telegram: {stage}")
         time.sleep(1)
 
-    # 실제 운영의 위원회 대안 자동승계와 동일하게 successor의 실제 bill_id는
-    # 바뀌지만 hub_source_id는 원안의 허브 identity를 계속 사용한다.
     successor_id = f"HUBTEST_{case_id}_ALT"
     successor_alert = {
         **base_item(
