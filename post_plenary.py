@@ -7,6 +7,17 @@ from bs4 import BeautifulSoup
 LIKMS_BASE = "https://likms.assembly.go.kr/bill/billDetail.do"
 LAWMAKING_BASE = "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out"
 
+BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/151.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.7",
+    "Cache-Control": "no-cache",
+}
+
 
 def clean(text) -> str:
     return str(text or "").replace("\xa0", " ").strip()
@@ -32,11 +43,8 @@ def build_lawmaking_url(bill: Dict) -> str:
 
 
 def _find_date(text: str, label: str) -> str:
-    # Official pages change whitespace/table markup frequently. Search a bounded
-    # window after the semantic label and accept dot/slash/dash or Korean date
-    # separators. The bounded window prevents accidentally taking a later date.
     match = re.search(
-        rf"{re.escape(label)}(?P<gap>.{{0,100}}?)(?P<date>\d{{4}}\s*(?:[.\-/년])\s*\d{{1,2}}\s*(?:[.\-/월])\s*\d{{1,2}}\s*(?:[.일])?)",
+        rf"{re.escape(label)}(?P<gap>.{{0,120}}?)(?P<date>\d{{4}}\s*(?:[.\-/년])\s*\d{{1,2}}\s*(?:[.\-/월])\s*\d{{1,2}}\s*(?:[.일])?)",
         text,
         flags=re.DOTALL,
     )
@@ -45,7 +53,7 @@ def _find_date(text: str, label: str) -> str:
 
 def _find_number(text: str, label: str) -> str:
     match = re.search(
-        rf"{re.escape(label)}.{{0,60}}?제?\s*(\d+)",
+        rf"{re.escape(label)}.{{0,80}}?제?\s*(\d+)",
         text,
         flags=re.DOTALL,
     )
@@ -53,7 +61,7 @@ def _find_number(text: str, label: str) -> str:
 
 
 def _find_promulgated_law(text: str) -> str:
-    match = re.search(r"공포법률.{0,40}?(?:법률\s*)?([^\n|]{2,120})", text, flags=re.DOTALL)
+    match = re.search(r"공포법률.{0,60}?(?:법률\s*)?([^\n|]{2,120})", text, flags=re.DOTALL)
     if not match:
         return ""
     value = clean(match.group(1))
@@ -66,8 +74,6 @@ def _parse_status_html(html_text: str, source: str, url: str) -> Dict[str, str]:
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
 
-    # Keep both line-oriented and flattened text. Some official pages put labels
-    # and values in separate table cells; others render them on one line.
     lines = [line.strip() for line in soup.get_text("\n", strip=True).splitlines() if line.strip()]
     line_text = "\n".join(lines)
     flat_text = " ".join(lines)
@@ -103,23 +109,57 @@ def _merge_result(base: Dict[str, str], incoming: Dict[str, str]) -> Dict[str, s
     return merged
 
 
+def _fetch_lawmaking_html(url: str) -> str:
+    # The lawmaking site sometimes returns a shell page to a bare automation
+    # request. Prime a browser-like session on the section root first so the
+    # detail request receives the same server-side rendering path as a browser.
+    with requests.Session() as s:
+        s.headers.update(BROWSER_HEADERS)
+        try:
+            s.get(LAWMAKING_BASE, timeout=20)
+        except Exception:
+            pass
+        response = s.get(
+            url,
+            headers={"Referer": LAWMAKING_BASE + "/"},
+            timeout=30,
+            allow_redirects=True,
+        )
+        response.raise_for_status()
+        # The site is UTF-8. Do not let chardet/apparent_encoding corrupt Korean
+        # semantic labels such as 정부이송일 and 공포일자.
+        text = response.content.decode("utf-8", errors="replace")
+        print(
+            f"[DEBUG] 국민참여입법센터 응답: status={response.status_code} "
+            f"bytes={len(response.content)} final={response.url} "
+            f"gov_label={'정부이송일' in text} prom_label={'공포일자' in text}"
+        )
+        return text
+
+
+def _fetch_generic_html(session: requests.Session, url: str, source: str) -> str:
+    response = session.get(url, headers=BROWSER_HEADERS, timeout=30, allow_redirects=True)
+    response.raise_for_status()
+    encoding = response.encoding or "utf-8"
+    try:
+        text = response.content.decode(encoding, errors="replace")
+    except LookupError:
+        text = response.content.decode("utf-8", errors="replace")
+    print(
+        f"[DEBUG] {source} 응답: status={response.status_code} bytes={len(response.content)} "
+        f"final={response.url} gov_label={'정부이송일' in text} prom_label={'공포일자' in text}"
+    )
+    return text
+
+
 def fetch_post_plenary_status(
     bill: Dict,
     session: Optional[requests.Session] = None,
 ) -> Dict[str, str]:
     own_session = session is None
     session = session or requests.Session()
-    session.headers.update(
-        {
-            "User-Agent": "Mozilla/5.0 (assembly-law-alert/1.0)",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Accept-Language": "ko-KR,ko;q=0.9",
-        }
-    )
 
     try:
-        # 국민참여입법센터 상세는 정부이송/공포정보를 명시적으로 제공하므로
-        # 후속단계의 1순위 원천으로 사용하고, LIKMS는 보완 원천으로 사용한다.
         urls = [
             ("국민참여입법센터", build_lawmaking_url(bill)),
             ("국회 의안정보시스템", build_likms_url(bill)),
@@ -129,15 +169,28 @@ def fetch_post_plenary_status(
             if not url:
                 continue
             try:
-                response = session.get(url, timeout=30)
-                response.raise_for_status()
-                response.encoding = response.apparent_encoding or response.encoding or "utf-8"
-                result = _parse_status_html(response.text, source, url)
+                if source == "국민참여입법센터":
+                    html_text = _fetch_lawmaking_html(url)
+                else:
+                    html_text = _fetch_generic_html(session, url, source)
+                result = _parse_status_html(html_text, source, url)
+                print(
+                    f"[DEBUG] {source} 파싱: government_transfer_date={result.get('government_transfer_date') or '-'} "
+                    f"promulgation_date={result.get('promulgation_date') or '-'} "
+                    f"promulgation_no={result.get('promulgation_no') or '-'}"
+                )
                 combined = _merge_result(combined, result)
-                if combined.get("government_transfer_date") and combined.get("promulgation_date") and combined.get("promulgation_no"):
+                if (
+                    combined.get("government_transfer_date")
+                    and combined.get("promulgation_date")
+                    and combined.get("promulgation_no")
+                ):
                     break
             except Exception as exc:
-                print(f"[WARN] {source} 후속단계 조회 실패: {bill.get('bill_no') or bill.get('bill_id')} / {exc}")
+                print(
+                    f"[WARN] {source} 후속단계 조회 실패: "
+                    f"{bill.get('bill_no') or bill.get('bill_id')} / {exc}"
+                )
         return combined
     finally:
         if own_session:
