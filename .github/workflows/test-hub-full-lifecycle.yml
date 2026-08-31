@@ -14,7 +14,7 @@ on:
       case_id:
         description: '같은 테스트 케이스에서 register/continue에 동일하게 입력'
         required: true
-        default: '20260831A'
+        default: '20260831E'
         type: string
 
 jobs:
@@ -37,8 +37,6 @@ jobs:
       - name: Run full hub lifecycle test
         env:
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TEST_PHASE: ${{ inputs.phase }}
           TEST_CASE_ID: ${{ inputs.case_id }}
         run: python test_hub_full_lifecycle.py
