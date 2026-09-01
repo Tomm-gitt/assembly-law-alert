@@ -4,14 +4,14 @@
     "bill_name": "하도급거래 공정화에 관한 법률 일부개정법률안(대안)",
     "bill_no": "2220251",
     "first_seen_at": "2026-09-01T09:44:01+09:00",
-    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
+    "last_status_changed_at": "2026-09-01T10:21:09+09:00",
+    "last_status_checked_at": "2026-09-01T10:21:09+09:00",
     "late_stage_discovered_at": "2026-09-01T09:44:01+09:00",
-    "late_stage_discovered_event": "정부이송",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "",
       "detail_link": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_B2V6Z0J5V1C3M1O7N5P7Z3R9W8T0A1",
-      "government_transfer_date": "",
+      "government_transfer_date": "2026-08-28",
       "law_submit_date": "2026-05-14",
       "plenary_date": "2026-08-20"
     },
@@ -25,7 +25,7 @@
     "bill_name": "전자상거래 등에서의 소비자보호에 관한 법률 일부개정법률안",
     "bill_no": "2220645",
     "first_seen_at": "2026-08-24T10:54:35+09:00",
-    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
+    "last_status_checked_at": "2026-09-01T10:21:09+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -44,7 +44,7 @@
     "bill_no": "2220774",
     "first_seen_at": "2026-08-26T06:50:43+09:00",
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
+    "last_status_checked_at": "2026-09-01T10:21:09+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -64,7 +64,7 @@
     "bill_no": "2220247",
     "first_seen_at": "2026-09-01T09:56:02+09:00",
     "last_status_changed_at": "2026-09-01T09:56:32+09:00",
-    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
+    "last_status_checked_at": "2026-09-01T10:21:09+09:00",
     "late_stage_discovered_at": "2026-09-01T09:56:02+09:00",
     "lifecycle": {
       "committee": "정무위원회",
