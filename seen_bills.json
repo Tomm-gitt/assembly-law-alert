@@ -4,7 +4,7 @@
     "bill_name": "하도급거래 공정화에 관한 법률 일부개정법률안(대안)",
     "bill_no": "2220251",
     "first_seen_at": "2026-09-01T09:44:01+09:00",
-    "last_status_checked_at": "2026-09-01T09:44:40+09:00",
+    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
     "late_stage_discovered_at": "2026-09-01T09:44:01+09:00",
     "late_stage_discovered_event": "정부이송",
     "lifecycle": {
@@ -25,7 +25,7 @@
     "bill_name": "전자상거래 등에서의 소비자보호에 관한 법률 일부개정법률안",
     "bill_no": "2220645",
     "first_seen_at": "2026-08-24T10:54:35+09:00",
-    "last_status_checked_at": "2026-09-01T09:44:40+09:00",
+    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -44,7 +44,7 @@
     "bill_no": "2220774",
     "first_seen_at": "2026-08-26T06:50:43+09:00",
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-09-01T09:44:40+09:00",
+    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -57,5 +57,27 @@
     "matched_law": "소비자기본법",
     "post_plenary_master_initialized_at": "2026-08-26T06:53:06+09:00",
     "proposal_date": "2026-08-25"
+  },
+  "PRC_V2X6R0E5I1T3Z1P7I5O7R0R2Q2R5T1": {
+    "auto_imported_late_stage": true,
+    "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안(대안)",
+    "bill_no": "2220247",
+    "first_seen_at": "2026-09-01T09:56:02+09:00",
+    "last_status_changed_at": "2026-09-01T09:56:32+09:00",
+    "last_status_checked_at": "2026-09-01T09:56:32+09:00",
+    "late_stage_discovered_at": "2026-09-01T09:56:02+09:00",
+    "lifecycle": {
+      "committee": "정무위원회",
+      "committee_referral_date": "",
+      "detail_link": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_V2X6R0E5I1T3Z1P7I5O7R0R2Q2R5T1",
+      "government_transfer_date": "2026-08-28",
+      "law_submit_date": "2026-05-14",
+      "plenary_date": "2026-08-20"
+    },
+    "lifecycle_initialized_at": "2026-09-01T09:56:32+09:00",
+    "matched_law": "독점규제 및 공정거래에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-09-01T09:58:20+09:00",
+    "proposal_date": "2026-07-29",
+    "status_tracking": true
   }
 }
