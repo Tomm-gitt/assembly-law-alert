@@ -5,7 +5,7 @@
     "bill_no": "2220251",
     "first_seen_at": "2026-09-01T09:44:01+09:00",
     "last_status_changed_at": "2026-09-01T10:21:09+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "late_stage_discovered_at": "2026-09-01T09:44:01+09:00",
     "lifecycle": {
       "committee": "정무위원회",
@@ -25,7 +25,7 @@
     "bill_name": "전자상거래 등에서의 소비자보호에 관한 법률 일부개정법률안",
     "bill_no": "2220645",
     "first_seen_at": "2026-08-24T10:54:35+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -39,12 +39,30 @@
     "post_plenary_master_initialized_at": "2026-08-25T14:08:12+09:00",
     "proposal_date": "2026-08-20"
   },
+  "PRC_I2J6I0I8D3C1D1B5B1A9B5I7J3I0G0": {
+    "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
+    "bill_no": "2221089",
+    "first_seen_at": "2026-09-05T06:33:49+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
+    "lifecycle": {
+      "committee": "",
+      "committee_referral_date": "",
+      "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_I2J6I0I8D3C1D1B5B1A9B5I7J3I0G0&ageFrom=22&ageTo=22",
+      "government_transfer_date": "",
+      "law_submit_date": "",
+      "plenary_date": ""
+    },
+    "lifecycle_initialized_at": "2026-09-05T06:36:14+09:00",
+    "matched_law": "독점규제 및 공정거래에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-09-05T06:38:57+09:00",
+    "proposal_date": "2026-09-04"
+  },
   "PRC_O2O6M0C7C1B6B1Z4A2Z9Z1H8H5G9E0": {
     "bill_name": "소비자기본법 일부개정법률안",
     "bill_no": "2220774",
     "first_seen_at": "2026-08-26T06:50:43+09:00",
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -63,7 +81,7 @@
     "bill_no": "2220991",
     "first_seen_at": "2026-09-02T06:33:31+09:00",
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-09-02",
@@ -81,10 +99,11 @@
     "bill_name": "자원의 절약과 재활용촉진에 관한 법률 일부개정법률안",
     "bill_no": "2221076",
     "first_seen_at": "2026-09-04T06:33:35+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_changed_at": "2026-09-05T06:36:14+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "lifecycle": {
-      "committee": "",
-      "committee_referral_date": "",
+      "committee": "기후에너지환경노동위원회",
+      "committee_referral_date": "2026-09-04",
       "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_R2P6P0O8P2K5L1J5H4I1G2H8P5P1O0&ageFrom=22&ageTo=22",
       "government_transfer_date": "",
       "law_submit_date": "",
@@ -101,7 +120,7 @@
     "bill_no": "2220247",
     "first_seen_at": "2026-09-01T09:56:02+09:00",
     "last_status_changed_at": "2026-09-01T09:56:32+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "late_stage_discovered_at": "2026-09-01T09:56:02+09:00",
     "lifecycle": {
       "committee": "정무위원회",
@@ -122,7 +141,7 @@
     "bill_no": "2220990",
     "first_seen_at": "2026-09-02T06:33:31+09:00",
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-09-04T08:04:42+09:00",
+    "last_status_checked_at": "2026-09-05T06:36:14+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-02",
