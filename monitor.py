@@ -40,6 +40,8 @@ WATCH_LAWS = [
     "표시·광고의 공정화에 관한 법률",
     "인삼산업법",
     "농수산물 품질관리법",
+    "종자산업법",
+    "식물신품종 보호법",
 ]
 
 HEADERS = {
@@ -312,7 +314,7 @@ def build_mail_html(bills: List[Dict]) -> str:
           <div style="background:#ffffff;border-radius:12px;padding:24px;">
             <div style="font-size:13px;color:#6b7280;">국회 법률안 자동 모니터링</div>
             <div style="font-size:23px;font-weight:700;margin-top:5px;color:#111827;">신규 법률안 {len(bills)}건</div>
-            <div style="font-size:14px;color:#6b7280;margin-top:5px;">{today_kst.strftime('%Y.%m.%d')} · 지정 15개 법률 기준</div>
+            <div style="font-size:14px;color:#6b7280;margin-top:5px;">{today_kst.strftime('%Y.%m.%d')} · 지정 {len(WATCH_LAWS)}개 법률 기준</div>
             {''.join(blocks)}
             <div style="font-size:12px;color:#9ca3af;margin-top:18px;line-height:1.6;">
               신규 의안 여부를 빠르게 확인하기 위한 자동 알림입니다. 자사 관련 여부는 담당자가 의안 내용을 확인해 판단합니다.
@@ -368,7 +370,7 @@ def main() -> int:
         key=lambda x: (str(x.get("proposal_date") or ""), str(x.get("bill_no") or "")),
         reverse=True,
     )
-    print(f"[INFO] 지정 15개 법률 매칭: {len(watched)}건")
+    print(f"[INFO] 지정 {len(WATCH_LAWS)}개 법률 매칭: {len(watched)}건")
 
     seen = load_seen()
     state_was_empty = not bool(seen)
