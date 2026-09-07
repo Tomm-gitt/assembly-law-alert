@@ -1,6 +1,11 @@
 name: "[검증] 관리대상 법률 17종 확인"
 
 on:
+  pull_request:
+    paths:
+      - 'monitor.py'
+      - 'validate_laws.py'
+      - '.github/workflows/validate-laws.yml'
   workflow_dispatch:
 
 permissions:
