@@ -112,9 +112,10 @@ def run_normalization_checks() -> List[str]:
 def main() -> int:
     session = requests.Session()
     session.headers.update(monitor.HEADERS)
+    total = len(monitor.WATCH_LAWS)
 
     print("=" * 72)
-    print("15개 관리 법률 실제 국회 의안 매칭 검증")
+    print(f"{total}개 관리 법률 실제 국회 의안 매칭 검증")
     print("- 제22대 실제 의안을 우선 검색하고, 샘플이 없으면 21·20대까지 확인")
     print("- 운영 seen_bills.json / Gmail에는 전혀 영향을 주지 않음")
     print("=" * 72)
@@ -136,7 +137,7 @@ def main() -> int:
             age, rows = fetch_samples(session, law)
             if not rows:
                 failed.append(law)
-                print(f"\n[{index:02d}/15] FAIL | {law}")
+                print(f"\n[{index:02d}/{total}] FAIL | {law}")
                 print("  실제 의원발의 샘플을 제20~22대에서 찾지 못함")
                 continue
 
@@ -152,19 +153,19 @@ def main() -> int:
             if age == "22":
                 current_assembly += 1
 
-            print(f"\n[{index:02d}/15] {status} | {law}")
+            print(f"\n[{index:02d}/{total}] {status} | {law}")
             print(f"  실제 샘플: 제{age}대 / 의안번호 {row.get('BILL_NO') or '-'}")
             print(f"  법률안명: {bill_name}")
             print(f"  매칭 결과: {matched or '매칭 없음'}")
             print(f"  제안일: {row.get('PROPOSE_DT') or '-'}")
 
         print("\n" + "=" * 72)
-        print(f"검증 결과: {passed}/15 PASS")
-        print(f"제22대 실제 샘플로 검증된 법률: {current_assembly}/15")
+        print(f"검증 결과: {passed}/{total} PASS")
+        print(f"제22대 실제 샘플로 검증된 법률: {current_assembly}/{total}")
         if failed:
             print("확인 필요:", ", ".join(failed))
         else:
-            print("결론: 15개 법률 모두 실제 국회 의안명에서 정확히 매칭됨")
+            print(f"결론: {total}개 법률 모두 실제 국회 의안명에서 정확히 매칭됨")
         print("=" * 72)
 
         return 1 if failed or normalization_failures else 0
