@@ -33,26 +33,29 @@ def _hub_alert(entry, bill_id, stage, record):
 
 
 def send_promulgation_via_hub(entry, bill_id, record):
-    subject = f"[국회 법률안] 공포_{lem.keyword_for(record['law_name'])}"
-    lem.send_email(subject, lem.build_promulgation_html(record))
+    # Hub가 추적 여부와 Telegram 발송의 최종 권한을 가진다.
+    # 반드시 Hub 확인을 먼저 하고, X(추적중단)가 아닌 경우에만 직접 이메일을 보낸다.
     eligible = hub_notify.send_status_alerts([_hub_alert(entry, bill_id, "공포", record)])
     if not eligible:
-        # X 판정으로 Hub 추적이 중단된 것은 정상 운영 상태다.
-        # 예외를 발생시키면 뒤의 seen_bills 저장/commit이 스킵되어 신규 의안이 반복 처리된다.
         entry["status_tracking"] = False
-        print(f"[INFO] 허브 추적중단 확인 - 공포 후속 알림 제외: {entry.get('bill_no') or bill_id}")
+        print(f"[INFO] 허브 추적중단 확인 - 공포 이메일/Telegram 후속 알림 제외: {entry.get('bill_no') or bill_id}")
         return False
+
+    subject = f"[국회 법률안] 공포_{lem.keyword_for(record['law_name'])}"
+    lem.send_email(subject, lem.build_promulgation_html(record))
     return True
 
 
 def send_enforcement_via_hub(entry, bill_id, record, today):
-    subject = f"[법률 시행] {lem.keyword_for(record['law_name'])}"
-    lem.send_email(subject, lem.build_enforcement_html(record, today=today))
+    # 공포와 동일하게 Hub 판정을 먼저 확인한다.
     eligible = hub_notify.send_status_alerts([_hub_alert(entry, bill_id, "시행", record)])
     if not eligible:
         entry["status_tracking"] = False
-        print(f"[INFO] 허브 추적중단 확인 - 시행 후속 알림 제외: {entry.get('bill_no') or bill_id}")
+        print(f"[INFO] 허브 추적중단 확인 - 시행 이메일/Telegram 후속 알림 제외: {entry.get('bill_no') or bill_id}")
         return False
+
+    subject = f"[법률 시행] {lem.keyword_for(record['law_name'])}"
+    lem.send_email(subject, lem.build_enforcement_html(record, today=today))
     return True
 
 
