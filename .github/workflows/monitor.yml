@@ -85,6 +85,7 @@ jobs:
             echo "No state changes."
             exit 0
           fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -- seen_bills.json
@@ -92,4 +93,16 @@ jobs:
             git add -- late_stage_discovery_state.json
           fi
           git commit -m "Update law monitoring state"
-          git push
+
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "State push failed (attempt ${attempt}/3). Refreshing origin/main before retry."
+            git fetch origin main
+            git rebase origin/main
+            sleep $((attempt * 3))
+          done
+
+          echo "State push failed after 3 attempts."
+          exit 1
