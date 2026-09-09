@@ -1,4 +1,4 @@
-name: "[검증] 관리대상 법률 17종 확인"
+name: "[검증] 관리대상 법률 18종 확인"
 
 on:
   pull_request:
@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Validate all 17 laws
+      - name: Validate all 18 laws
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
         run: python validate_laws.py
