@@ -1,0 +1,33 @@
+name: "[TEST] 국회 Gemini AI 요약"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test common HUB payload only
+        run: python hub_notify.py
+
+      - name: Test Gemini AI summary
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ASSEMBLY_GEMINI_MODEL: ${{ secrets.ASSEMBLY_GEMINI_MODEL }}
+        run: python content_enrichment.py
