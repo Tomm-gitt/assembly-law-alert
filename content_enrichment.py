@@ -1,4 +1,7 @@
+import json
+import os
 import re
+import time
 from typing import Dict, List, Optional
 
 import requests
@@ -20,6 +23,13 @@ STOP_MARKERS = [
     "부가정보",
     "의안원문",
 ]
+
+ASSEMBLY_GEMINI_MODELS = [
+    "gemini-3.8-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+]
+AI_SOURCE_MAX_LENGTH = 14000
 
 
 def clean_inline(text: str) -> str:
@@ -54,7 +64,6 @@ def _extract_relevant_segment(page_text: str) -> str:
         "대안의 제안이유 및 주요내용",
         "제안이유 및 주요내용",
     ]
-
     starts = []
     for candidate in candidates:
         pos = 0
@@ -64,14 +73,10 @@ def _extract_relevant_segment(page_text: str) -> str:
                 break
             starts.append((idx, candidate))
             pos = idx + len(candidate)
-
     if not starts:
         return ""
-
-    # 제목/메뉴에 같은 문구가 한 번 더 등장하는 페이지가 있어 마지막 출현을 본문 시작점으로 사용한다.
     start, marker = max(starts, key=lambda x: x[0])
     segment = page_text[start + len(marker):]
-
     end_positions = []
     for stop in STOP_MARKERS:
         idx = segment.find(stop)
@@ -79,18 +84,10 @@ def _extract_relevant_segment(page_text: str) -> str:
             end_positions.append(idx)
     if end_positions:
         segment = segment[: min(end_positions)]
-
     return clean_inline(segment)
 
 
 def _find_combined_section_pivot(text: str):
-    """Find the real transition from background/reason to the amendment itself.
-
-    Combined '제안이유 및 주요내용' text often contains ordinary phrases such as
-    '이에 필요한 정보를...' inside the background. Treating the first '이에' as the
-    boundary truncates the proposal reason. Prefer explicit amendment-transition
-    phrases and only use a conservative generic fallback.
-    """
     preferred_patterns = [
         r"(?:^|\n|\s)(이에\s+(?:따라\s+)?(?:본\s*)?(?:개정안|법률안)(?:은|에서는|으로|을|를)?\s*)",
         r"(?:^|\n|\s)(따라서\s+(?:본\s*)?(?:개정안|법률안)(?:은|에서는|으로|을|를)?\s*)",
@@ -99,9 +96,6 @@ def _find_combined_section_pivot(text: str):
         match = re.search(pattern, text)
         if match and match.start() > 40:
             return match
-
-    # Fallback: only accept a generic '이에' when it directly introduces a
-    # legislative action, not ordinary noun phrases such as '이에 필요한'.
     generic = re.search(
         r"(?:^|\n|\s)(이에(?:\s+따라)?\s+(?=(?:현행법|법|제\d+조|규정|근거|제도|절차|권한|의무|과태료|벌칙).{0,80}(?:개정|신설|삭제|마련|규정|부과|강화|개선)))",
         text,
@@ -115,10 +109,11 @@ def _find_combined_section_pivot(text: str):
 def _split_reason_main(segment: str) -> Dict[str, str]:
     if not segment:
         return {"proposal_reason": "", "main_content": ""}
-
-    text = segment
-    text = re.sub(r"^(?:제안이유 및 주요내용|대안의 제안이유 및 주요내용)\s*", "", text).strip()
-
+    text = re.sub(
+        r"^(?:제안이유 및 주요내용|대안의 제안이유 및 주요내용)\s*",
+        "",
+        segment,
+    ).strip()
     reason_match = re.search(
         r"(?:^|\n)(?:대안의\s*)?제안이유\s*(.*?)(?=\n(?:대안의\s*)?주요내용\s*(?:\n|$))",
         text,
@@ -129,21 +124,17 @@ def _split_reason_main(segment: str) -> Dict[str, str]:
         text,
         flags=re.S,
     )
-
     if reason_match or main_match:
-        reason = clean_inline(reason_match.group(1) if reason_match else "")
-        main = clean_inline(main_match.group(1) if main_match else "")
-        return {"proposal_reason": reason, "main_content": main}
-
-    # 국민참여입법센터는 두 항목을 한 본문으로 제공하는 경우가 많다.
-    # 문제/현황 설명 속의 일반적인 '이에 필요한...' 등을 경계로 오인하지 않고,
-    # '이에 개정안은...'처럼 실제 개정행위가 시작되는 지점을 우선 사용한다.
+        return {
+            "proposal_reason": clean_inline(reason_match.group(1) if reason_match else ""),
+            "main_content": clean_inline(main_match.group(1) if main_match else ""),
+        }
     pivot = _find_combined_section_pivot(text)
     if pivot:
-        reason = clean_inline(text[: pivot.start()])
-        main = clean_inline(text[pivot.start():])
-        return {"proposal_reason": reason, "main_content": main}
-
+        return {
+            "proposal_reason": clean_inline(text[: pivot.start()]),
+            "main_content": clean_inline(text[pivot.start():]),
+        }
     return {"proposal_reason": "", "main_content": clean_inline(text)}
 
 
@@ -151,13 +142,10 @@ def _extract_from_lawmaking_html(html: str) -> Dict[str, str]:
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup(["script", "style", "noscript"]):
         tag.decompose()
-
-    # 표 형식: <th>제안이유 및 주요내용</th><td>본문...</td>
     for label in soup.find_all(["th", "dt", "strong", "span", "div"]):
         label_text = clean_inline(label.get_text(" ", strip=True))
         if label_text != "제안이유 및 주요내용":
             continue
-
         if label.name == "th":
             td = label.find_next_sibling("td")
             if td:
@@ -170,18 +158,15 @@ def _extract_from_lawmaking_html(html: str) -> Dict[str, str]:
                 body = clean_inline(dd.get_text("\n", strip=True))
                 if len(body) >= 30:
                     return _split_reason_main(body)
-
         parent = label.parent
         if parent:
-            text = clean_inline(parent.get_text("\n", strip=True))
-            if len(text) >= 50:
-                segment = _extract_relevant_segment(text)
+            parent_text = clean_inline(parent.get_text("\n", strip=True))
+            if len(parent_text) >= 50:
+                segment = _extract_relevant_segment(parent_text)
                 if segment:
                     return _split_reason_main(segment)
-
     page_text = clean_inline(soup.get_text("\n", strip=True))
-    segment = _extract_relevant_segment(page_text)
-    return _split_reason_main(segment)
+    return _split_reason_main(_extract_relevant_segment(page_text))
 
 
 def _get_html(session: requests.Session, url: str) -> str:
@@ -201,25 +186,17 @@ def fetch_bill_content(bill: Dict, session: Optional[requests.Session] = None) -
             "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.7",
         }
     )
-
     errors = []
     try:
-        # 1순위: 국민참여입법센터. 의안번호 기반이며 본문 텍스트가 정적 HTML에 노출된다.
         lawmaking_url = build_lawmaking_url(bill)
         if lawmaking_url:
             try:
                 parts = _extract_from_lawmaking_html(_get_html(session, lawmaking_url))
                 if parts["proposal_reason"] or parts["main_content"]:
-                    return {
-                        **parts,
-                        "content_source": "국민참여입법센터",
-                        "content_error": "",
-                    }
+                    return {**parts, "content_source": "국민참여입법센터", "content_error": ""}
                 errors.append("국민참여입법센터: 제안이유 및 주요내용 영역을 찾지 못했습니다.")
             except Exception as exc:
                 errors.append(f"국민참여입법센터: {exc}")
-
-        # 2순위 fallback: LIKMS 상세페이지
         likms_url = build_detail_url(bill)
         if likms_url:
             try:
@@ -229,15 +206,10 @@ def fetch_bill_content(bill: Dict, session: Optional[requests.Session] = None) -
                 raw_text = clean_inline(soup.get_text("\n", strip=True))
                 parts = _split_reason_main(_extract_relevant_segment(raw_text))
                 if parts["proposal_reason"] or parts["main_content"]:
-                    return {
-                        **parts,
-                        "content_source": "LIKMS",
-                        "content_error": "",
-                    }
+                    return {**parts, "content_source": "LIKMS", "content_error": ""}
                 errors.append("LIKMS: 제안이유 및 주요내용 영역을 찾지 못했습니다.")
             except Exception as exc:
                 errors.append(f"LIKMS: {exc}")
-
         return {
             "proposal_reason": "",
             "main_content": "",
@@ -253,11 +225,9 @@ def summarize_reason(text: str, max_chars: int = 650) -> str:
     text = clean_inline(text)
     if not text:
         return ""
-
     sentences = [s.strip() for s in re.split(r"(?<=[.!?。]|[임됨함])\s+", text) if s.strip()]
     if not sentences:
         return text[:max_chars]
-
     out = ""
     for sentence in sentences[:3]:
         candidate = (out + " " + sentence).strip()
@@ -271,10 +241,8 @@ def main_content_points(text: str) -> List[str]:
     text = clean_inline(text)
     if not text:
         return []
-
     raw_lines = [line.strip() for line in text.splitlines() if line.strip()]
     bullet_re = re.compile(r"^(?:[○●□■※▶▷]|\(?\d+\)?[.)]|[①-⑳]|[가-하][.)])\s*")
-
     if sum(1 for line in raw_lines if bullet_re.match(line)) >= 2:
         points: List[str] = []
         current = ""
@@ -288,11 +256,9 @@ def main_content_points(text: str) -> List[str]:
         if current:
             points.append(clean_inline(current))
         return [p for p in points if p]
-
     sentences = [s.strip() for s in re.split(r"(?<=[.!?。])\s+|(?<=임)\s+|(?<=함)\s+", text) if s.strip()]
     if len(sentences) <= 1:
         return [text]
-
     points = []
     current = ""
     for sentence in sentences:
@@ -307,21 +273,205 @@ def main_content_points(text: str) -> List[str]:
     return points
 
 
+def _gemini_models() -> List[str]:
+    configured = str(os.getenv("ASSEMBLY_GEMINI_MODEL") or "").strip()
+    models: List[str] = []
+    for model in [configured, *ASSEMBLY_GEMINI_MODELS]:
+        name = str(model or "").strip()
+        if name and name not in models:
+            models.append(name)
+    return models
+
+
+def _build_ai_prompt(bill: Dict, reason: str, main: str) -> str:
+    return f"""
+당신은 대한민국 기업의 국회 법률안 모니터링 담당자를 지원하는 요약 도우미입니다.
+
+아래 내용은 국회에 제출된 법률안의 제안이유와 주요내용 원문입니다.
+
+목적:
+담당자가 모바일에서 빠르게 읽고 법률안의 실제 변경사항을 판단할 수 있도록 짧고 정확하게 정리하십시오.
+
+중요 규칙:
+1. 원문에 없는 사실, 효과, 시행일, 의무를 추론하거나 추가하지 마십시오.
+2. 자사 관련 여부 자체는 판단하지 마십시오.
+3. 제안이유는 핵심 배경과 입법 목적을 1~3문장으로 요약하십시오.
+4. 주요내용은 서로 다른 실제 변경사항을 빠뜨리지 말고 번호형 항목으로 정리하십시오.
+5. 신설·삭제·변경되는 의무, 금지, 기준, 절차, 적용대상, 비용, 과태료·벌칙, 시행일·경과조치가 원문에 있으면 반드시 포함하십시오.
+6. 원문 항목이 1개면 1개만, 여러 개면 핵심사항 수에 맞게 최대 7개까지 작성하십시오.
+7. 제목만 다시 말하지 말고 실제 법률안 내용을 우선하십시오.
+8. 응답은 반드시 JSON 객체만 반환하십시오.
+9. reason과 mainItems 외 설명, 마크다운, 코드블록을 출력하지 마십시오.
+
+법률안명:
+{str(bill.get("bill_name") or "")}
+
+관리 법률:
+{str(bill.get("matched_law") or "")}
+
+원문 제안이유:
+{clean_inline(reason)[:AI_SOURCE_MAX_LENGTH] or "(별도 제안이유 없음)"}
+
+원문 주요내용:
+{clean_inline(main)[:AI_SOURCE_MAX_LENGTH] or "(주요내용 확인 불가)"}
+""".strip()
+
+
+def _parse_gemini_json(text: str) -> Dict:
+    raw = str(text or "").strip()
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.I)
+        raw = re.sub(r"\s*```$", "", raw)
+    return json.loads(raw)
+
+
+def summarize_bill_with_ai(bill: Dict, reason: str, main: str) -> Dict:
+    api_key = str(os.getenv("GEMINI_API_KEY") or "").strip()
+    if not api_key:
+        return {
+            "reason": summarize_reason(reason),
+            "mainItems": main_content_points(main),
+            "aiUsed": False,
+            "aiModel": "",
+        }
+
+    prompt = _build_ai_prompt(bill, reason, main)
+    payload = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 1000,
+            "responseMimeType": "application/json",
+        },
+    }
+    last_error = None
+    for model in _gemini_models():
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+        for attempt in range(1, 3):
+            try:
+                print("[INFO] 국회 Gemini 요약 시도:", model, f"attempt={attempt}")
+                response = requests.post(
+                    url,
+                    headers={"x-goog-api-key": api_key, "Content-Type": "application/json"},
+                    json=payload,
+                    timeout=45,
+                )
+                response.raise_for_status()
+                result = response.json()
+                candidates = result.get("candidates") if isinstance(result, dict) else None
+                if not candidates:
+                    raise RuntimeError("Gemini candidate 없음")
+                parts = candidates[0].get("content", {}).get("parts", [])
+                response_text = "\n".join(
+                    str(part.get("text") or "") for part in parts if isinstance(part, dict)
+                ).strip()
+                parsed = _parse_gemini_json(response_text)
+                ai_reason = clean_inline(parsed.get("reason"))
+                ai_items = [
+                    clean_inline(item)
+                    for item in (parsed.get("mainItems") or [])
+                    if clean_inline(item)
+                ]
+                if not ai_reason or not ai_items:
+                    raise RuntimeError("Gemini 요약 JSON 형식 오류")
+                print("[INFO] 국회 Gemini 요약 성공:", model)
+                return {
+                    "reason": ai_reason,
+                    "mainItems": ai_items,
+                    "aiUsed": True,
+                    "aiModel": model,
+                }
+            except Exception as exc:
+                last_error = exc
+                print(
+                    "[WARN] 국회 Gemini 요약 실패:",
+                    model,
+                    f"attempt={attempt}",
+                    str(exc)[:500],
+                )
+                if attempt < 2:
+                    time.sleep(1.5 * attempt)
+
+    print("[WARN] 모든 Gemini 모델 실패 - 비AI fallback 사용:", str(last_error)[:500])
+    return {
+        "reason": summarize_reason(reason),
+        "mainItems": main_content_points(main),
+        "aiUsed": False,
+        "aiModel": "",
+    }
+
+
+def build_collector_content(reason: str, main_items: List[str]) -> str:
+    lines: List[str] = []
+    reason = clean_inline(reason)
+    items = [clean_inline(item) for item in (main_items or []) if clean_inline(item)]
+    if reason:
+        lines.extend(["■ 제안이유", reason])
+    if items:
+        if lines:
+            lines.append("")
+        lines.append("■ 주요내용")
+        for index, item in enumerate(items, 1):
+            lines.append(f"{index}. {item}")
+    return "\n".join(lines).strip()
+
+
+def enrich_bill(bill: Dict, session: Optional[requests.Session] = None) -> Dict:
+    content = fetch_bill_content(bill, session=session)
+    bill.update(content)
+    summary = summarize_bill_with_ai(
+        bill,
+        content.get("proposal_reason", ""),
+        content.get("main_content", ""),
+    )
+    bill["proposal_reason_summary"] = summary.get("reason") or ""
+    bill["main_content_points"] = summary.get("mainItems") or []
+    bill["ai_used"] = summary.get("aiUsed") is True
+    bill["ai_model"] = summary.get("aiModel") or ""
+    bill["content"] = build_collector_content(
+        bill["proposal_reason_summary"],
+        bill["main_content_points"],
+    )
+    return bill
+
+
 def enrich_bills(bills: List[Dict]) -> None:
     session = requests.Session()
     try:
         for bill in bills:
-            content = fetch_bill_content(bill, session=session)
-            bill.update(content)
-            bill["proposal_reason_summary"] = summarize_reason(content.get("proposal_reason", ""))
-            bill["main_content_points"] = main_content_points(content.get("main_content", ""))
+            enrich_bill(bill, session=session)
             print(
-                "[INFO] 원문 수집",
+                "[INFO] 국회 원문/AI 처리",
                 bill.get("bill_no"),
-                f"source={content.get('content_source') or '-'}",
-                f"reason={len(content.get('proposal_reason', ''))}",
-                f"main={len(content.get('main_content', ''))}",
-                f"error={content.get('content_error') or '-'}",
+                f"source={bill.get('content_source') or '-'}",
+                f"reason={len(bill.get('proposal_reason', ''))}",
+                f"main={len(bill.get('main_content', ''))}",
+                f"ai={bill.get('ai_used')}",
+                f"model={bill.get('ai_model') or '-'}",
+                f"content={len(bill.get('content', ''))}",
+                f"error={bill.get('content_error') or '-'}",
             )
     finally:
         session.close()
+
+
+def test_ai_summary_only() -> Dict:
+    bill = {
+        "bill_name": "[TEST] 독점규제 및 공정거래에 관한 법률 일부개정법률안",
+        "matched_law": "독점규제 및 공정거래에 관한 법률",
+    }
+    reason = "현행 제도의 운영상 미비점을 개선하고 사업자의 예측가능성을 높이기 위하여 관련 규정을 정비하려는 것임."
+    main = (
+        "가. 자료 제출 기준을 명확히 함.\n"
+        "나. 반복 위반에 대한 기준을 정비함.\n"
+        "다. 시행일과 적용례를 규정함."
+    )
+    result = summarize_bill_with_ai(bill, reason, main)
+    result["content"] = build_collector_content(
+        result.get("reason", ""), result.get("mainItems", [])
+    )
+    return result
+
+
+if __name__ == "__main__":
+    print(json.dumps(test_ai_summary_only(), ensure_ascii=False, indent=2))
