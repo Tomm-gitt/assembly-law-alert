@@ -51,7 +51,12 @@ def _post(payload: Dict) -> Dict:
 
     for attempt in range(1, 4):
         try:
-            response = requests.post(url, json=payload, timeout=30, allow_redirects=True)
+            response = requests.post(
+                url,
+                json=payload,
+                timeout=30,
+                allow_redirects=True,
+            )
             response.raise_for_status()
 
             try:
@@ -71,16 +76,48 @@ def _post(payload: Dict) -> Dict:
     raise RuntimeError(f"통합 허브 전송 실패: {last_error}")
 
 
+def _matched_keywords_from_law(law_name: str) -> List[str]:
+    law = _clean(law_name)
+    return [law] if law else []
+
+
+def _fallback_content_from_bill(bill: Dict) -> str:
+    reason = _clean(bill.get("proposal_reason_summary"))
+    points = [
+        _clean(point)
+        for point in (bill.get("main_content_points") or [])
+        if _clean(point)
+    ]
+
+    lines = []
+    if reason:
+        lines.extend(["■ 제안이유", reason])
+
+    if points:
+        if lines:
+            lines.append("")
+        lines.append("■ 주요내용")
+        for index, point in enumerate(points, 1):
+            lines.append(f"{index}. {point}")
+
+    return "\n".join(lines).strip()
+
+
 def build_new_bill_payload(bill: Dict) -> Dict:
+    content = _clean(bill.get("content")) or _fallback_content_from_bill(bill)
+
     return {
         "sourceOrg": "국회",
         "sourceType": "신규 법률안",
         "sourceId": _clean(bill.get("hub_source_id") or bill.get("bill_id")),
         "title": _clean(bill.get("bill_name")),
         "publishedDate": _normalize_date(bill.get("proposal_date")),
-        "originalUrl": _clean(bill.get("detail_link")).replace("http://", "https://", 1),
         "currentStage": _clean(bill.get("process_result")) or "발의/접수",
         "stageDate": _normalize_date(bill.get("proposal_date")),
+        "content": content,
+        "originalUrl": _clean(bill.get("detail_link")).replace("http://", "https://", 1),
+        "matchedKeywords": _matched_keywords_from_law(bill.get("matched_law")),
+        "aiUsed": bill.get("ai_used") is True,
         "matchedLaw": _clean(bill.get("matched_law")),
         "billNo": _clean(bill.get("bill_no")),
         "proposer": _clean(bill.get("proposer") or bill.get("proposer_kind")),
@@ -91,11 +128,12 @@ def build_new_bill_payload(bill: Dict) -> Dict:
             for point in (bill.get("main_content_points") or [])
             if _clean(point)
         ],
+        "aiModel": _clean(bill.get("ai_model")),
     }
 
 
 def build_status_payload(alert: Dict) -> Dict:
-    return {
+    payload = {
         "sourceOrg": "국회",
         "sourceType": "법률안 진행상태",
         "sourceId": _clean(alert.get("hub_source_id") or alert.get("bill_id")),
@@ -108,6 +146,8 @@ def build_status_payload(alert: Dict) -> Dict:
             or alert.get("promulgation_date")
             or alert.get("enforcement_date")
         ),
+        "matchedKeywords": _matched_keywords_from_law(alert.get("matched_law")),
+        "aiUsed": False,
         "matchedLaw": _clean(alert.get("matched_law")),
         "billNo": _clean(alert.get("bill_no")),
         "committee": _clean(alert.get("committee")),
@@ -116,29 +156,37 @@ def build_status_payload(alert: Dict) -> Dict:
         "enforcementDate": _normalize_date(alert.get("enforcement_date")) if _clean(alert.get("enforcement_date")) else "",
     }
 
+    content = _clean(alert.get("content"))
+    if content:
+        payload["content"] = content
+
+    return payload
+
 
 def send_new_bills(bills: List[Dict]) -> None:
     if not bills:
         return
 
     for bill in bills:
-        result = _post(build_new_bill_payload(bill))
+        payload = build_new_bill_payload(bill)
+        if not _clean(payload.get("content")):
+            raise RuntimeError(
+                "국회 신규 법률안 content가 비어 있습니다: "
+                + (_clean(bill.get("bill_no")) or _clean(bill.get("bill_id")))
+            )
+
+        result = _post(payload)
         action = _extract_action(result)
         print(
             "[INFO] 통합 허브 신규 의안 전송 완료: "
             f"{_clean(bill.get('bill_no')) or _clean(bill.get('bill_id'))} / "
+            f"ai={payload.get('aiUsed')} / "
             f"{action or result.get('ok')}"
         )
 
 
 def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
-    """Send Assembly lifecycle events to the hub.
-
-    The hub is authoritative for tracking and Telegram delivery. If an X
-    judgment stopped tracking, the hub returns ASSEMBLY_TRACKING_STOPPED and
-    that item is excluded from the returned list. Collectors never send
-    Telegram directly.
-    """
+    """국회 lifecycle 이벤트를 HUB로 보내고 추적중단 의안을 제외한다."""
     if not alerts:
         return []
 
@@ -165,3 +213,32 @@ def send_status_alerts(alerts: List[Dict]) -> List[Dict]:
         accepted.append(alert)
 
     return accepted
+
+
+def test_build_new_bill_payload() -> Dict:
+    bill = {
+        "bill_id": "TEST_ASSEMBLY_PAYLOAD_ONLY",
+        "bill_no": "9999999",
+        "bill_name": "[TEST] 국회 공통 payload 생성 테스트",
+        "proposal_date": datetime.now(KST).strftime("%Y-%m-%d"),
+        "detail_link": "https://likms.assembly.go.kr/",
+        "matched_law": "독점규제 및 공정거래에 관한 법률",
+        "proposer": "테스트 의원",
+        "committee": "정무위원회",
+        "process_result": "",
+        "proposal_reason_summary": "공통 payload 생성 여부를 확인하기 위한 테스트입니다.",
+        "main_content_points": [
+            "content가 Collector에서 완성되어야 합니다.",
+            "matchedKeywords와 aiUsed가 포함되어야 합니다.",
+        ],
+        "ai_used": True,
+        "ai_model": "TEST",
+    }
+    bill["content"] = _fallback_content_from_bill(bill)
+    return build_new_bill_payload(bill)
+
+
+if __name__ == "__main__":
+    import json
+
+    print(json.dumps(test_build_new_bill_payload(), ensure_ascii=False, indent=2))
