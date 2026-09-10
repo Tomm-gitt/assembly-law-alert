@@ -3,30 +3,28 @@ import status_alert_runner
 import status_monitor
 
 
-_original_send_email = status_monitor.send_email
+def send_status_to_hub(alerts):
+    """
+    국회 lifecycle 상태변경 운영 경로.
 
-
-def send_email_telegram_and_hub(alerts):
-    _original_send_email(alerts)
-
-    # 상태변경 Telegram 발송 책임은 통합 허브로 중앙화한다.
-    # 허브는 자신의 TELEGRAM_CHAT_ID를 사용하므로 신규 O/X와 상태변경이
-    # 항상 같은 허브 알림방으로 간다. X 판정 의안은 허브에서 추적중단 처리된다.
+    Collector는 Gmail/Telegram을 직접 보내지 않는다.
+    HUB가 tracking 및 Telegram 발송시간 정책을 담당한다.
+    """
     try:
-        telegram_eligible = hub_notify.send_status_alerts(alerts)
+        accepted = hub_notify.send_status_alerts(alerts)
     except Exception as exc:
-        # 이메일은 이미 발송되었고, 허브 동기화/Telegram 실패는 로그로 남긴다.
         print(f"[WARN] 통합 허브 상태변경 처리 실패: {exc}")
-        return
+        raise
 
-    if not telegram_eligible:
+    if not accepted:
         print("[INFO] 허브 판정 기준 상태변경 대상이 없습니다.")
         return
 
-    print(f"[INFO] 통합 허브 상태변경 처리 완료: {len(telegram_eligible)}건")
+    print(f"[INFO] 통합 허브 상태변경 처리 완료: {len(accepted)}건")
 
 
-status_monitor.send_email = send_email_telegram_and_hub
+# 기존 상태탐지 로직은 그대로 두고 이메일 콜백만 HUB 전송으로 교체한다.
+status_monitor.send_email = send_status_to_hub
 
 
 if __name__ == "__main__":
