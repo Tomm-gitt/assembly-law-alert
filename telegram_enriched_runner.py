@@ -1,23 +1,33 @@
 import sys
 
-import enriched_runner
 import hub_notify
 import monitor
+from content_enrichment import enrich_bills
 
 
-_original_send_email = enriched_runner.send_email_enriched
+def enrich_and_send_to_hub(bills):
+    """
+    신규 법률안 운영 경로.
 
+    기존:
+      원문 수집/정리 -> 국회 Gmail 직접발송 -> HUB
 
-def send_email_and_hub(bills):
-    _original_send_email(bills)
+    v2:
+      원문 수집 -> Gemini AI 요약 -> content 완성 -> HUB만 전송
 
-    # 신규 의안 Telegram/OX 알림은 통합 허브가 전담한다.
-    # 국회 저장소는 허브 장애 시에도 별도 Telegram fallback을 보내지 않는다.
-    # 이렇게 해야 모든 기관 알림이 허브의 Bot/Chat ID 하나로 유지된다.
+    Gmail/Telegram/MASTER/판정/일일보고는 HUB가 담당한다.
+    """
+    if not bills:
+        return
+
+    enrich_bills(bills)
     hub_notify.send_new_bills(bills)
 
+    print(f"[INFO] 국회 신규 의안 HUB 전송 전용 처리 완료: {len(bills)}건")
 
-monitor.send_email = send_email_and_hub
+
+# monitor.main()의 탐지/seen_bills 로직은 그대로 두고 전송 콜백만 교체한다.
+monitor.send_email = enrich_and_send_to_hub
 
 
 if __name__ == "__main__":
