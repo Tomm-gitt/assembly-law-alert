@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       force_send_recent:
-        description: '최근 7일 매칭 건을 테스트 메일/허브로 강제 발송'
+        description: '최근 7일 매칭 건을 테스트로 강제 HUB 전송'
         required: false
         default: false
         type: boolean
       force_send_status_test:
-        description: '추적 의안의 현재 진행상태를 테스트 메일/허브로 강제 발송'
+        description: '추적 의안의 현재 진행상태를 테스트로 강제 HUB 전송'
         required: false
         default: false
         type: boolean
@@ -48,9 +48,8 @@ jobs:
       - name: Run new bill monitor
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ASSEMBLY_GEMINI_MODEL: ${{ secrets.ASSEMBLY_GEMINI_MODEL }}
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
           FORCE_SEND_RECENT: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_recent || false }}
         run: python run_with_network_retry.py telegram_enriched_runner.py
@@ -63,9 +62,6 @@ jobs:
       - name: Run status change monitor
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
           FORCE_SEND_STATUS_TEST: ${{ github.event_name == 'workflow_dispatch' && inputs.force_send_status_test || false }}
         run: python run_with_network_retry.py telegram_status_runner.py
@@ -73,9 +69,6 @@ jobs:
       - name: Run promulgation and enforcement monitor
         env:
           LAW_API_OC: ${{ secrets.LAW_API_OC }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
         run: python hub_law_effective_runner.py
 
