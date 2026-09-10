@@ -33,29 +33,30 @@ def _hub_alert(entry, bill_id, stage, record):
 
 
 def send_promulgation_via_hub(entry, bill_id, record):
-    # Hub가 추적 여부와 Telegram 발송의 최종 권한을 가진다.
-    # 반드시 Hub 확인을 먼저 하고, X(추적중단)가 아닌 경우에만 직접 이메일을 보낸다.
-    eligible = hub_notify.send_status_alerts([_hub_alert(entry, bill_id, "공포", record)])
+    eligible = hub_notify.send_status_alerts([
+        _hub_alert(entry, bill_id, "공포", record)
+    ])
     if not eligible:
         entry["status_tracking"] = False
-        print(f"[INFO] 허브 추적중단 확인 - 공포 이메일/Telegram 후속 알림 제외: {entry.get('bill_no') or bill_id}")
+        print(
+            f"[INFO] 허브 추적중단 확인 - 공포 후속 알림 제외: "
+            f"{entry.get('bill_no') or bill_id}"
+        )
         return False
-
-    subject = f"[국회 법률안] 공포_{lem.keyword_for(record['law_name'])}"
-    lem.send_email(subject, lem.build_promulgation_html(record))
     return True
 
 
 def send_enforcement_via_hub(entry, bill_id, record, today):
-    # 공포와 동일하게 Hub 판정을 먼저 확인한다.
-    eligible = hub_notify.send_status_alerts([_hub_alert(entry, bill_id, "시행", record)])
+    eligible = hub_notify.send_status_alerts([
+        _hub_alert(entry, bill_id, "시행", record)
+    ])
     if not eligible:
         entry["status_tracking"] = False
-        print(f"[INFO] 허브 추적중단 확인 - 시행 이메일/Telegram 후속 알림 제외: {entry.get('bill_no') or bill_id}")
+        print(
+            f"[INFO] 허브 추적중단 확인 - 시행 후속 알림 제외: "
+            f"{entry.get('bill_no') or bill_id}"
+        )
         return False
-
-    subject = f"[법률 시행] {lem.keyword_for(record['law_name'])}"
-    lem.send_email(subject, lem.build_enforcement_html(record, today=today))
     return True
 
 
@@ -88,7 +89,10 @@ def main() -> int:
                 print(f"[WARN] 공포정보 조회 실패: {entry.get('bill_no') or bill_id} / {exc}")
                 continue
 
-            entry["post_plenary_master_initialized_at"] = entry.get("post_plenary_master_initialized_at") or now
+            entry["post_plenary_master_initialized_at"] = (
+                entry.get("post_plenary_master_initialized_at") or now
+            )
+
             if not post.get("promulgation_date") or not post.get("promulgation_no"):
                 continue
 
@@ -109,18 +113,24 @@ def main() -> int:
             )
 
             if not same_publication:
-                baseline_only = initializing and entry.get("late_stage_discovered_event") != "공포"
+                baseline_only = (
+                    initializing and entry.get("late_stage_discovered_event") != "공포"
+                )
                 current = {
                     **verified,
                     "verified_at": now,
                     "promulgation_sent": baseline_only,
                     "enforcement_sent": bool(
-                        verified.get("enforcement_date") and verified["enforcement_date"] < today
+                        verified.get("enforcement_date")
+                        and verified["enforcement_date"] < today
                     ),
                 }
                 entry["promulgation"] = current
                 if baseline_only:
-                    print(f"[INFO] 기존 공포정보 기준 저장: {entry.get('bill_no')} / 제{verified.get('promulgation_no')}호")
+                    print(
+                        f"[INFO] 기존 공포정보 기준 저장: {entry.get('bill_no')} / "
+                        f"제{verified.get('promulgation_no')}호"
+                    )
 
             if not current.get("promulgation_sent"):
                 handled = send_promulgation_via_hub(entry, bill_id, current)
@@ -128,19 +138,35 @@ def main() -> int:
                 current["promulgation_sent_at"] = now
                 entry.pop("late_stage_discovered_event", None)
                 if handled:
-                    print(f"[INFO] 허브 공포 알림 처리: {entry.get('bill_no')} / 제{current.get('promulgation_no')}호")
+                    print(
+                        f"[INFO] 허브 공포 알림 처리: {entry.get('bill_no')} / "
+                        f"제{current.get('promulgation_no')}호"
+                    )
                 else:
-                    print(f"[INFO] 허브 추적중단 의안 공포 처리 완료: {entry.get('bill_no')} / 제{current.get('promulgation_no')}호")
+                    print(
+                        f"[INFO] 허브 추적중단 의안 공포 처리 완료: {entry.get('bill_no')} / "
+                        f"제{current.get('promulgation_no')}호"
+                    )
 
             enforcement_date = clean(current.get("enforcement_date"))
-            if enforcement_date and enforcement_date <= today and not current.get("enforcement_sent"):
+            if (
+                enforcement_date
+                and enforcement_date <= today
+                and not current.get("enforcement_sent")
+            ):
                 handled = send_enforcement_via_hub(entry, bill_id, current, today)
                 current["enforcement_sent"] = True
                 current["enforcement_sent_at"] = now
                 if handled:
-                    print(f"[INFO] 허브 시행 알림 처리: {entry.get('bill_no')} / {lem.fmt_date(enforcement_date)}")
+                    print(
+                        f"[INFO] 허브 시행 알림 처리: {entry.get('bill_no')} / "
+                        f"{lem.fmt_date(enforcement_date)}"
+                    )
                 else:
-                    print(f"[INFO] 허브 추적중단 의안 시행 처리 완료: {entry.get('bill_no')} / {lem.fmt_date(enforcement_date)}")
+                    print(
+                        f"[INFO] 허브 추적중단 의안 시행 처리 완료: {entry.get('bill_no')} / "
+                        f"{lem.fmt_date(enforcement_date)}"
+                    )
 
         monitor.save_seen(seen)
         return 0
