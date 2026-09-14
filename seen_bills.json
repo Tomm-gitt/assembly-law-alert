@@ -3,7 +3,7 @@
     "bill_name": "종자산업법 일부개정법률안",
     "bill_no": "2221152",
     "first_seen_at": "2026-09-10T06:33:35+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "농림축산식품해양수산위원회",
       "committee_referral_date": "2026-09-09",
@@ -56,7 +56,7 @@
     "bill_no": "2221255",
     "first_seen_at": "2026-09-10T06:33:35+09:00",
     "last_status_changed_at": "2026-09-11T06:34:32+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-10",
@@ -74,7 +74,7 @@
     "bill_name": "전자상거래 등에서의 소비자보호에 관한 법률 일부개정법률안",
     "bill_no": "2220645",
     "first_seen_at": "2026-08-24T10:54:35+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -93,7 +93,7 @@
     "bill_no": "2221089",
     "first_seen_at": "2026-09-05T06:33:49+09:00",
     "last_status_changed_at": "2026-09-08T06:34:28+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-07",
@@ -111,10 +111,11 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221328",
     "first_seen_at": "2026-09-12T06:33:33+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_changed_at": "2026-09-15T06:35:05+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
-      "committee": "",
-      "committee_referral_date": "",
+      "committee": "정무위원회",
+      "committee_referral_date": "2026-09-14",
       "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_M2L6L0J9F0G8E1F1D1E2C5K7L8J8K7&ageFrom=22&ageTo=22",
       "government_transfer_date": "",
       "law_submit_date": "",
@@ -130,7 +131,7 @@
     "bill_no": "2221244",
     "first_seen_at": "2026-09-10T06:33:35+09:00",
     "last_status_changed_at": "2026-09-11T06:34:32+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-10",
@@ -149,7 +150,7 @@
     "bill_no": "2220774",
     "first_seen_at": "2026-08-26T06:50:43+09:00",
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -168,7 +169,7 @@
     "bill_no": "2220991",
     "first_seen_at": "2026-09-02T06:33:31+09:00",
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-09-02",
@@ -187,7 +188,7 @@
     "bill_no": "2221076",
     "first_seen_at": "2026-09-04T06:33:35+09:00",
     "last_status_changed_at": "2026-09-05T06:36:14+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "기후에너지환경노동위원회",
       "committee_referral_date": "2026-09-04",
@@ -201,11 +202,29 @@
     "post_plenary_master_initialized_at": "2026-09-04T06:37:31+09:00",
     "proposal_date": "2026-09-03"
   },
+  "PRC_R2Q6X0Y9W1X0V1W9U1V2K3I7J0H5H9": {
+    "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
+    "bill_no": "2221375",
+    "first_seen_at": "2026-09-15T06:33:38+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
+    "lifecycle": {
+      "committee": "",
+      "committee_referral_date": "",
+      "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_R2Q6X0Y9W1X0V1W9U1V2K3I7J0H5H9&ageFrom=22&ageTo=22",
+      "government_transfer_date": "",
+      "law_submit_date": "",
+      "plenary_date": ""
+    },
+    "lifecycle_initialized_at": "2026-09-15T06:35:05+09:00",
+    "matched_law": "독점규제 및 공정거래에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-09-15T06:37:36+09:00",
+    "proposal_date": "2026-09-14"
+  },
   "PRC_T2R6S0R9R0Q2X1Y3X2X0V2U5U0C8D9": {
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221158",
     "first_seen_at": "2026-09-10T06:33:35+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-09",
@@ -223,10 +242,11 @@
     "bill_name": "식품위생법 일부개정법률안",
     "bill_no": "2221340",
     "first_seen_at": "2026-09-12T06:33:33+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_changed_at": "2026-09-15T06:35:05+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
-      "committee": "",
-      "committee_referral_date": "",
+      "committee": "보건복지위원회",
+      "committee_referral_date": "2026-09-14",
       "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_T2U6S0T9R1P0Q0Y9Y2X9X4V2W0V9C3&ageFrom=22&ageTo=22",
       "government_transfer_date": "",
       "law_submit_date": "",
@@ -276,7 +296,7 @@
     "bill_no": "2220990",
     "first_seen_at": "2026-09-02T06:33:31+09:00",
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-09-14T08:04:40+09:00",
+    "last_status_checked_at": "2026-09-15T06:35:05+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-02",
