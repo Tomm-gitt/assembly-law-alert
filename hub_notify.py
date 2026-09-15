@@ -46,6 +46,14 @@ def _extract_action(data: Dict) -> str:
 
 
 def _post(payload: Dict) -> Dict:
+    """POST to HUB and accept only a real JSON success response.
+
+    Historically a Google Apps Script HTML/error page with HTTP 200 could be
+    mistaken for success because non-JSON responses were converted to
+    {"ok": True}. That can permanently suppress a NEW_BILL retry after the
+    collector records it as seen. Fail closed instead: only JSON {ok:true}
+    counts as delivery.
+    """
     url = _hub_url()
     last_error = None
 
@@ -61,10 +69,14 @@ def _post(payload: Dict) -> Dict:
 
             try:
                 data = response.json()
-            except ValueError:
-                data = {"ok": True, "raw": response.text}
+            except ValueError as exc:
+                preview = _clean(response.text)[:300]
+                raise RuntimeError(
+                    "허브가 JSON이 아닌 응답을 반환했습니다. "
+                    f"status={response.status_code} body={preview!r}"
+                ) from exc
 
-            if data.get("ok") is False:
+            if not isinstance(data, dict) or data.get("ok") is not True:
                 raise RuntimeError(f"허브 처리 실패: {data}")
 
             return data
@@ -117,6 +129,7 @@ def build_new_bill_payload(bill: Dict) -> Dict:
     content = _clean(bill.get("content")) or _fallback_content_from_bill(bill)
 
     return {
+        "eventType": "NEW_BILL",
         "sourceOrg": "국회",
         "sourceType": "신규 법률안",
         "sourceId": _clean(bill.get("hub_source_id") or bill.get("bill_id")),
@@ -145,6 +158,7 @@ def build_new_bill_payload(bill: Dict) -> Dict:
 
 def build_status_payload(alert: Dict) -> Dict:
     payload = {
+        "eventType": "STATUS_CHANGE",
         "sourceOrg": "국회",
         "sourceType": "법률안 진행상태",
         "sourceId": _clean(alert.get("hub_source_id") or alert.get("bill_id")),
