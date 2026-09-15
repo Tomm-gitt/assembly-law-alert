@@ -1,0 +1,67 @@
+name: Deploy HUB Apps Script
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_webapp:
+        description: 'Also update the existing Web App deployment'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-hub:
+    runs-on: ubuntu-latest
+    env:
+      HUB_APPS_SCRIPT_ID: ${{ secrets.HUB_APPS_SCRIPT_ID }}
+      HUB_APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.HUB_APPS_SCRIPT_DEPLOYMENT_ID }}
+      HUB_CLASPRC_JSON: ${{ secrets.HUB_CLASPRC_JSON }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets and source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$HUB_APPS_SCRIPT_ID" || { echo "Missing secret: HUB_APPS_SCRIPT_ID"; exit 1; }
+          test -n "$HUB_CLASPRC_JSON" || { echo "Missing secret: HUB_CLASPRC_JSON"; exit 1; }
+          test -f apps-script/hub/appsscript.json || { echo "apps-script/hub/appsscript.json is missing. Run 'Sync HUB Apps Script source' first."; exit 1; }
+          gs_count=$(find apps-script/hub -maxdepth 1 -type f -name '*.gs' | wc -l | tr -d ' ')
+          test "$gs_count" -ge 5 || { echo "HUB source looks incomplete: only $gs_count .gs files. Run source sync first."; exit 1; }
+          if [ "${{ inputs.deploy_webapp }}" = "true" ]; then
+            test -n "$HUB_APPS_SCRIPT_DEPLOYMENT_ID" || { echo "Missing secret: HUB_APPS_SCRIPT_DEPLOYMENT_ID"; exit 1; }
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clasp
+        run: npm install --global @google/clasp
+
+      - name: Configure clasp
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$HUB_CLASPRC_JSON" > "$HOME/.clasprc.json"
+          chmod 600 "$HOME/.clasprc.json"
+          printf '{"scriptId":"%s","rootDir":"apps-script/hub"}\n' "$HUB_APPS_SCRIPT_ID" > .clasp.json
+
+      - name: Show files to be pushed
+        run: clasp status
+
+      - name: Push GitHub source to Apps Script
+        run: clasp push --force
+
+      - name: Update existing Web App deployment
+        if: ${{ inputs.deploy_webapp }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          desc="GitHub Actions ${GITHUB_SHA::7} $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          clasp deploy --deploymentId "$HUB_APPS_SCRIPT_DEPLOYMENT_ID" --description "$desc"
