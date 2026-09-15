@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HUB_APPS_SCRIPT_ID: ${{ secrets.HUB_APPS_SCRIPT_ID }}
-      HUB_CLASPRC_JSON: ${{ secrets.HUB_CLASPRC_JSON }}
+      CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$HUB_APPS_SCRIPT_ID" || { echo "Missing secret: HUB_APPS_SCRIPT_ID"; exit 1; }
-          test -n "$HUB_CLASPRC_JSON" || { echo "Missing secret: HUB_CLASPRC_JSON"; exit 1; }
+          test -n "$CLASPRC_JSON" || { echo "Missing secret: CLASPRC_JSON"; exit 1; }
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          printf '%s' "$HUB_CLASPRC_JSON" > "$HOME/.clasprc.json"
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
           chmod 600 "$HOME/.clasprc.json"
 
       - name: Pull live Apps Script project
