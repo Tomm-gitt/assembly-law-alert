@@ -21,8 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HUB_APPS_SCRIPT_ID: ${{ secrets.HUB_APPS_SCRIPT_ID }}
-      HUB_APPS_SCRIPT_DEPLOYMENT_ID: ${{ secrets.HUB_APPS_SCRIPT_DEPLOYMENT_ID }}
-      HUB_CLASPRC_JSON: ${{ secrets.HUB_CLASPRC_JSON }}
+      WEB_APP_DEPLOYMENT_ID: ${{ secrets.WEB_APP_DEPLOYMENT_ID }}
+      CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,12 +32,12 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$HUB_APPS_SCRIPT_ID" || { echo "Missing secret: HUB_APPS_SCRIPT_ID"; exit 1; }
-          test -n "$HUB_CLASPRC_JSON" || { echo "Missing secret: HUB_CLASPRC_JSON"; exit 1; }
+          test -n "$CLASPRC_JSON" || { echo "Missing secret: CLASPRC_JSON"; exit 1; }
           test -f apps-script/hub/appsscript.json || { echo "apps-script/hub/appsscript.json is missing. Run 'Sync HUB Apps Script source' first."; exit 1; }
           gs_count=$(find apps-script/hub -maxdepth 1 -type f -name '*.gs' | wc -l | tr -d ' ')
           test "$gs_count" -ge 5 || { echo "HUB source looks incomplete: only $gs_count .gs files. Run source sync first."; exit 1; }
           if [ "${GITHUB_EVENT_NAME}" = "push" ] || [ "${{ inputs.deploy_webapp }}" = "true" ]; then
-            test -n "$HUB_APPS_SCRIPT_DEPLOYMENT_ID" || { echo "Missing secret: HUB_APPS_SCRIPT_DEPLOYMENT_ID"; exit 1; }
+            test -n "$WEB_APP_DEPLOYMENT_ID" || { echo "Missing secret: WEB_APP_DEPLOYMENT_ID"; exit 1; }
           fi
 
       - name: Setup Node.js
@@ -52,7 +52,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          printf '%s' "$HUB_CLASPRC_JSON" > "$HOME/.clasprc.json"
+          printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
           chmod 600 "$HOME/.clasprc.json"
           printf '{"scriptId":"%s","rootDir":"apps-script/hub"}\n' "$HUB_APPS_SCRIPT_ID" > .clasp.json
 
@@ -68,4 +68,4 @@ jobs:
         run: |
           set -euo pipefail
           desc="GitHub Actions ${GITHUB_SHA::7} $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          clasp deploy --deploymentId "$HUB_APPS_SCRIPT_DEPLOYMENT_ID" --description "$desc"
+          clasp deploy --deploymentId "$WEB_APP_DEPLOYMENT_ID" --description "$desc"
