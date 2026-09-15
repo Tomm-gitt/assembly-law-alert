@@ -103,6 +103,16 @@ def _fallback_content_from_bill(bill: Dict) -> str:
     return "\n".join(lines).strip()
 
 
+def _proposer_value(data: Dict) -> str:
+    """대표발의자/제안자를 우선하고, 없으면 제안자 구분을 보존한다."""
+    return _clean(
+        data.get("proposer")
+        or data.get("proposer_name")
+        or data.get("representative_proposer")
+        or data.get("proposer_kind")
+    )
+
+
 def build_new_bill_payload(bill: Dict) -> Dict:
     content = _clean(bill.get("content")) or _fallback_content_from_bill(bill)
 
@@ -120,7 +130,8 @@ def build_new_bill_payload(bill: Dict) -> Dict:
         "aiUsed": bill.get("ai_used") is True,
         "matchedLaw": _clean(bill.get("matched_law")),
         "billNo": _clean(bill.get("bill_no")),
-        "proposer": _clean(bill.get("proposer") or bill.get("proposer_kind")),
+        "proposer": _proposer_value(bill),
+        "proposerKind": _clean(bill.get("proposer_kind")),
         "committee": _clean(bill.get("committee")),
         "summaryReason": _clean(bill.get("proposal_reason_summary")),
         "summaryMainItems": [
@@ -150,6 +161,8 @@ def build_status_payload(alert: Dict) -> Dict:
         "aiUsed": False,
         "matchedLaw": _clean(alert.get("matched_law")),
         "billNo": _clean(alert.get("bill_no")),
+        "proposer": _proposer_value(alert),
+        "proposerKind": _clean(alert.get("proposer_kind")),
         "committee": _clean(alert.get("committee")),
         "promulgationDate": _normalize_date(alert.get("promulgation_date")) if _clean(alert.get("promulgation_date")) else "",
         "promulgationNo": _clean(alert.get("promulgation_no")),
