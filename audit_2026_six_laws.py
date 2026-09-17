@@ -20,13 +20,72 @@ OUT_JSON = Path("audit_2026_six_laws.json")
 OUT_CSV = Path("audit_2026_six_laws.csv")
 
 
+def law_variants(law):
+    return list(dict.fromkeys([
+        law,
+        law.replace("·", "ㆍ"),
+        law.replace("ㆍ", "·"),
+    ]))
+
+
+def fetch_receipts_by_law(session):
+    """Direct BILLRCP queries per target law so committee/government bills are not lost by global paging/order."""
+    found = {}
+    for law in TARGET_LAWS:
+        for query in law_variants(law):
+            for page in range(1, 6):
+                data = monitor.request_api(
+                    session,
+                    monitor.RECEIPT_API,
+                    {
+                        "pIndex": str(page),
+                        "pSize": "1000",
+                        "BILL_NM": query,
+                    },
+                )
+                rows = monitor.parse_rows(data, monitor.RECEIPT_API)
+                if not rows:
+                    break
+                for row in rows:
+                    if str(row.get("ERACO") or "").strip() != monitor.ERACO:
+                        continue
+                    if "법률안" not in str(row.get("BILL_KIND") or ""):
+                        continue
+                    proposal_date = monitor.parse_date(row.get("PPSL_DT"))
+                    if not proposal_date or proposal_date < CUTOFF:
+                        continue
+                    bill_name = str(row.get("BILL_NM") or "")
+                    matched = monitor.match_watched_law(bill_name)
+                    if matched != law:
+                        continue
+                    bill_id = str(row.get("BILL_ID") or "").strip()
+                    if not bill_id:
+                        continue
+                    found[bill_id] = {
+                        "bill_id": row.get("BILL_ID"),
+                        "bill_no": row.get("BILL_NO"),
+                        "bill_name": row.get("BILL_NM"),
+                        "proposal_date": row.get("PPSL_DT"),
+                        "proposer": None,
+                        "proposer_kind": row.get("PPSR_KIND") or "제안자 정보 없음",
+                        "committee": None,
+                        "process_result": row.get("PROC_RSLT"),
+                        "detail_link": row.get("LINK_URL"),
+                        "source": monitor.RECEIPT_API,
+                    }
+                if len(rows) < 1000:
+                    break
+    return list(found.values())
+
+
 def main():
     session = requests.Session()
     session.headers.update(monitor.HEADERS)
     try:
         member = monitor.fetch_recent_member_bills(session, CUTOFF)
-        receipts = monitor.fetch_recent_receipts(session, CUTOFF)
-        merged = monitor.merge_by_bill_id(member, receipts)
+        receipts_global = monitor.fetch_recent_receipts(session, CUTOFF)
+        receipts_direct = fetch_receipts_by_law(session)
+        merged = monitor.merge_by_bill_id(member, receipts_global, receipts_direct)
 
         rows = []
         for bill in merged:
@@ -55,7 +114,8 @@ def main():
         payload = {
             "cutoff": CUTOFF.isoformat(),
             "member_raw_count": len(member),
-            "receipt_raw_count": len(receipts),
+            "receipt_global_raw_count": len(receipts_global),
+            "receipt_direct_raw_count": len(receipts_direct),
             "merged_raw_count": len(merged),
             "target_total": len(rows),
             "counts": counts,
@@ -67,7 +127,11 @@ def main():
             writer.writeheader()
             writer.writerows(rows)
 
-        print(json.dumps({"target_total": len(rows), "counts": counts}, ensure_ascii=False, indent=2))
+        print(json.dumps({
+            "target_total": len(rows),
+            "counts": counts,
+            "receipt_direct_raw_count": len(receipts_direct),
+        }, ensure_ascii=False, indent=2))
         for r in rows:
             print(f"{r['law']} | {r.get('bill_no')} | {r.get('proposal_date')} | {r.get('bill_name')} | {r.get('proposer') or r.get('proposer_kind')} | {r.get('process_result')}")
     finally:
