@@ -9,6 +9,7 @@ import requests
 import monitor
 import status_monitor
 import content_enrichment
+import post_plenary
 
 TARGET_LAWS = [
     "식품 등의 표시·광고에 관한 법률",
@@ -52,18 +53,26 @@ def summarize_main(text):
     return " / ".join(f"{i+1}. {p}" for i,p in enumerate(cleaned))
 
 
-def stage_from(bill, snap):
+def hub_stage_from(bill, snap, post):
+    """HUB의 currentStage 표현으로만 반환한다."""
     result = str(bill.get("process_result") or "").strip()
-    if result:
-        return result
-    stage = status_monitor.highest_stage(snap)
-    if stage == "소관위원회 처리" and snap.get("committee_process_result"):
-        return f"소관위원회 처리({snap.get('committee_process_result')})"
-    if stage == "법제사법위원회 처리" and snap.get("law_process_result"):
-        return f"법제사법위원회 처리({snap.get('law_process_result')})"
-    if stage == "본회의 처리" and snap.get("plenary_result"):
-        return f"본회의 처리({snap.get('plenary_result')})"
-    return stage
+
+    # 종결형 처리결과는 진행단계보다 우선한다.
+    if "대안반영폐기" in result:
+        return "대안반영폐기"
+    if "철회" in result:
+        return "철회"
+    if result == "부결":
+        return "본회의 처리"
+
+    # 본회의 이후는 HUB가 실제 쓰는 단계명으로 통일한다.
+    if str(post.get("promulgation_date") or "").strip():
+        return "공포"
+    if str(post.get("government_transfer_date") or "").strip():
+        return "정부이송"
+
+    # status_monitor.highest_stage()의 반환값은 HUB STATUS_CHANGE stage와 동일한 어휘다.
+    return status_monitor.highest_stage(snap)
 
 
 def main():
@@ -78,7 +87,7 @@ def main():
             if law in TARGET_LAWS and d and START <= d <= END:
                 bills.append({**b, "matched_law": law})
 
-        # 2026년 기간 중 확인된 위원회 대안. 의원발의 API에는 존재하지 않으므로 별도 합산.
+        # 의원발의 API에 없는 2026년 위원회 대안. 공식 국회입법현황에서 별도 확인.
         bills.append({
             "bill_id": "",
             "bill_no": "2217933",
@@ -106,10 +115,12 @@ def main():
             main_text = summarize_main(content.get("main_content") or "")
 
             if b.get("bill_no") == "2217933":
-                stage = "공포(2026-05-26, 법률 제21707호)"
+                snap = {"plenary_date": "2026-04-23", "plenary_result": "원안가결"}
             else:
                 snap = status_monitor.fetch_lifecycle(s, str(b.get("bill_id") or ""), b)
-                stage = stage_from(b, snap)
+
+            post = post_plenary.fetch_post_plenary_status(b, session=s)
+            stage = hub_stage_from(b, snap, post)
 
             out.append({
                 "법률명": b["matched_law"],
@@ -122,6 +133,9 @@ def main():
                 "주요내용": main_text,
                 "원문링크": f"https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out/{b.get('bill_no')}/detailRP",
                 "처리결과_API": str(b.get("process_result") or ""),
+                "정부이송일": str(post.get("government_transfer_date") or ""),
+                "공포일": str(post.get("promulgation_date") or ""),
+                "공포번호": str(post.get("promulgation_no") or ""),
                 "내용출처": content.get("content_source") or "",
                 "내용수집오류": content.get("content_error") or "",
             })
@@ -132,7 +146,10 @@ def main():
             w.writeheader(); w.writerows(out)
         counts = {law: sum(1 for r in out if r["법률명"] == law) for law in TARGET_LAWS}
         errors = [r["의안번호"] for r in out if not r["제안이유"] and not r["주요내용"]]
-        print(json.dumps({"total":len(out),"counts":counts,"content_empty":errors},ensure_ascii=False,indent=2))
+        stage_counts = {}
+        for r in out:
+            stage_counts[r["현재단계"]] = stage_counts.get(r["현재단계"], 0) + 1
+        print(json.dumps({"total":len(out),"counts":counts,"stage_counts":stage_counts,"content_empty":errors},ensure_ascii=False,indent=2))
     finally:
         s.close()
 
