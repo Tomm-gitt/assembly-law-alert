@@ -57,7 +57,6 @@ def hub_stage_from(bill, snap, post):
     """HUB의 currentStage 표현으로만 반환한다."""
     result = str(bill.get("process_result") or "").strip()
 
-    # 종결형 처리결과는 진행단계보다 우선한다.
     if "대안반영폐기" in result:
         return "대안반영폐기"
     if "철회" in result:
@@ -65,13 +64,11 @@ def hub_stage_from(bill, snap, post):
     if result == "부결":
         return "본회의 처리"
 
-    # 본회의 이후는 HUB가 실제 쓰는 단계명으로 통일한다.
     if str(post.get("promulgation_date") or "").strip():
         return "공포"
     if str(post.get("government_transfer_date") or "").strip():
         return "정부이송"
 
-    # status_monitor.highest_stage()의 반환값은 HUB STATUS_CHANGE stage와 동일한 어휘다.
     return status_monitor.highest_stage(snap)
 
 
@@ -87,7 +84,7 @@ def main():
             if law in TARGET_LAWS and d and START <= d <= END:
                 bills.append({**b, "matched_law": law})
 
-        # 의원발의 API에 없는 2026년 위원회 대안. 공식 국회입법현황에서 별도 확인.
+        # Open API에 아직 없지만 공식 국회입법현황에서 확인된 의안들을 합산한다.
         bills.append({
             "bill_id": "",
             "bill_no": "2217933",
@@ -100,6 +97,19 @@ def main():
             "detail_link": "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out/2217933/detailRP",
             "source": "국회입법현황",
             "matched_law": "식품 등의 표시·광고에 관한 법률",
+        })
+        bills.append({
+            "bill_id": "",
+            "bill_no": "2221426",
+            "bill_name": "표시·광고의 공정화에 관한 법률 일부개정법률안",
+            "proposal_date": "2026-09-17",
+            "proposer": "",
+            "proposer_kind": "의원발의",
+            "committee": "",
+            "process_result": "",
+            "detail_link": "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out/2221426/detailRP",
+            "source": "국회입법현황",
+            "matched_law": "표시·광고의 공정화에 관한 법률",
         })
 
         uniq = {}
