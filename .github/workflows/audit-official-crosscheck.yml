@@ -1,0 +1,36 @@
+name: "[감사] 2026 지정 6개 법률 공식목록 교차검증"
+
+on:
+  push:
+    branches:
+      - audit/2026-six-laws-census
+    paths:
+      - 'audit_official_crosscheck.py'
+      - '.github/workflows/audit-official-crosscheck.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  crosscheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Cross-check
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python audit_official_crosscheck.py
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-official-crosscheck
+          path: audit_official_crosscheck.json
