@@ -129,6 +129,14 @@ def build_official_universe(session):
 
 def main():
     session = FastSession()
+    # 대량 감사에서는 공식목록 스냅샷으로 전수성을 이미 고정했으므로,
+    # 내용 본문은 LIKMS를 우선해 공식페이지 지연을 피한다.
+    _orig_get_html = content_enrichment._get_html
+    def _fast_get_html(sess, url):
+        if "opinion.lawmaking.go.kr" in str(url):
+            raise RuntimeError("official detail skipped in bulk; use LIKMS")
+        return _orig_get_html(sess, url)
+    content_enrichment._get_html = _fast_get_html
     # 국민참여입법센터가 지연될 때 post_plenary는 LIKMS 경로로 즉시 fallback한다.
     def _skip_slow_lawmaking(url):
         raise RuntimeError("official lawmaking slow path skipped in bulk audit")
@@ -154,11 +162,13 @@ def main():
                 or receipt.get("PPSR_KIND")
             )
 
+            resolved_bill_id = clean(member.get("BILL_ID") or receipt.get("BILL_ID"))
+            likms_link = f"https://likms.assembly.go.kr/bill/billDetail.do?billId={resolved_bill_id}&ageFrom=22&ageTo=22" if resolved_bill_id else ""
             content = content_enrichment.fetch_bill_content({
-                "bill_id": clean(member.get("BILL_ID") or receipt.get("BILL_ID")),
+                "bill_id": resolved_bill_id,
                 "bill_no": b["bill_no"],
                 "bill_name": b["bill_name"],
-                "detail_link": b["detail_url"],
+                "detail_link": likms_link,
             }, session=session)
             reason = content_enrichment.summarize_reason(content.get("proposal_reason") or "", max_chars=900)
             main_content = summarize_main(content.get("main_content") or "")
@@ -176,24 +186,6 @@ def main():
 
             successor_no = ""
             successor_name = ""
-            if clean(b.get("status_hint")) == "대안반영폐기":
-                try:
-                    successor = alternative_successor.find_successor_bill(
-                        session,
-                        {
-                            "bill_no": b["bill_no"],
-                            "bill_name": b["bill_name"],
-                            "matched_law": b["law"],
-                            "proposal_date": b["proposal_date"],
-                        },
-                        lifecycle,
-                    ) or {}
-                    successor_no = clean(successor.get("bill_no"))
-                    successor_name = clean(successor.get("bill_name"))
-                    if successor_no:
-                        alt_count += 1
-                except Exception as e:
-                    print(f"WARN successor {b['bill_no']}: {e}")
 
             current_stage = hub_stage(b, lifecycle, post)
             stage_detail = ""
@@ -224,8 +216,43 @@ def main():
                 "BILL_ID": clean(member.get("BILL_ID") or receipt.get("BILL_ID")),
                 "내용출처": clean(content.get("content_source")),
                 "내용수집오류": clean(content.get("content_error")),
+                "_소관위처리일": norm_date(lifecycle.get("committee_process_date")),
             })
 
+        # 대안반영폐기 승계는 146건 내부의 위원회 대안을 한 번만 사용해 연결한다.
+        alternatives = [
+            r for r in out
+            if "(대안)" in r["법률안명"] or r["대표발의자"].endswith("위원장")
+        ]
+        from datetime import datetime
+        def _dt(s):
+            try: return datetime.strptime(s, "%Y-%m-%d").date()
+            except Exception: return None
+        for r in out:
+            if r["현재단계_HUB"] != "대안반영폐기":
+                continue
+            anchor = _dt(r.get("_소관위처리일")) or _dt(r.get("발의일"))
+            candidates = []
+            for a in alternatives:
+                if a["법률명"] != r["법률명"] or a["의안번호"] == r["의안번호"]:
+                    continue
+                ad = _dt(a["발의일"])
+                if not anchor or not ad:
+                    continue
+                delta = (ad-anchor).days
+                if -3 <= delta <= 30:
+                    candidates.append((abs(delta), 0 if delta >= 0 else 1, a))
+            candidates.sort(key=lambda x:(x[0],x[1],x[2]["의안번호"]))
+            if candidates:
+                best=candidates[0][2]
+                if len(candidates)==1 or candidates[0][:2] != candidates[1][:2]:
+                    r["대안반영_후속의안번호"]=best["의안번호"]
+                    r["대안반영_후속법률안명"]=best["법률안명"]
+                    r["단계상세"]=f"후속 대안 {best['의안번호']}"
+                    alt_count += 1
+
+        for r in out:
+            r.pop("_소관위처리일", None)
         counts = {law:sum(1 for r in out if r["법률명"]==law) for law in TARGET_LAWS}
         stages = {}
         for r in out:
