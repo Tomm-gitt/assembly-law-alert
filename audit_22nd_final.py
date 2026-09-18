@@ -102,6 +102,13 @@ def hub_stage(bill, lifecycle, post):
     return "발의/접수"
 
 def build_official_universe(session):
+    snapshot = Path("audit_official_crosscheck.json")
+    if snapshot.exists():
+        data = json.loads(snapshot.read_text(encoding="utf-8"))
+        rows = data.get("official_rows") or []
+        print(f"OFFICIAL SNAPSHOT: {len(rows)}")
+        return rows
+
     rows = {}
     for law in TARGET_LAWS:
         items = official_source.collect_official(session, law)
