@@ -6,6 +6,16 @@ from pathlib import Path
 
 import requests
 
+class FastSession(requests.Session):
+    def get(self, url, **kwargs):
+        timeout = kwargs.get("timeout", 8)
+        try:
+            timeout = min(float(timeout), 8.0)
+        except Exception:
+            timeout = 8.0
+        kwargs["timeout"] = timeout
+        return super().get(url, **kwargs)
+
 import monitor
 import status_monitor
 import content_enrichment
@@ -118,7 +128,11 @@ def build_official_universe(session):
     return list(rows.values())
 
 def main():
-    session = requests.Session()
+    session = FastSession()
+    # 국민참여입법센터가 지연될 때 post_plenary는 LIKMS 경로로 즉시 fallback한다.
+    def _skip_slow_lawmaking(url):
+        raise RuntimeError("official lawmaking slow path skipped in bulk audit")
+    post_plenary._fetch_lawmaking_html = _skip_slow_lawmaking
     session.headers.update(monitor.HEADERS)
     try:
         bills = build_official_universe(session)
