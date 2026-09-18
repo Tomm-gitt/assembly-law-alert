@@ -1,0 +1,31 @@
+name: "[감사] 제22대 지정 6개 법률 최종 전수표"
+on:
+  push:
+    branches: [audit/2026-six-laws-census]
+    paths:
+      - 'audit_22nd_final.py'
+      - '.github/workflows/audit-22nd-final.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - name: Build 22nd Assembly final census
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python audit_22nd_final.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-22nd-final-six-laws
+          path: |
+            audit_22nd_final_six_laws.csv
+            audit_22nd_final_six_laws.json
