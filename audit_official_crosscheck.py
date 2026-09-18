@@ -16,7 +16,7 @@ TARGET_LAWS = [
     "건강기능식품에 관한 법률",
     "자원의 절약과 재활용촉진에 관한 법률",
 ]
-START = date(2026, 1, 1)
+START = date(2024, 5, 30)
 END = date.today()
 LIST_URL = "https://opinion.lawmaking.go.kr/gcom/nsmLmSts/out"
 MAX_PAGES = 40
