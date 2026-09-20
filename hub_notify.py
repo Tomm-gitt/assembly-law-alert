@@ -1,4 +1,6 @@
+import json
 import os
+import re
 import time
 from datetime import datetime
 from typing import Dict, List
@@ -45,6 +47,30 @@ def _extract_action(data: Dict) -> str:
     return ""
 
 
+def _parse_hub_response(response) -> Dict:
+    """Parse direct JSON or the JSON embedded by Apps Script HtmlService."""
+    try:
+        return response.json()
+    except ValueError as direct_json_error:
+        body = response.text or ""
+        match = re.search(
+            r'''["']?userHtml["']?\s*[:=]\s*("(?:\\.|[^"\\])*")''',
+            body,
+        )
+        if match:
+            try:
+                embedded_text = json.loads(match.group(1))
+                return json.loads(embedded_text)
+            except (TypeError, ValueError):
+                pass
+
+        preview = _clean(body)[:300]
+        raise RuntimeError(
+            "허브가 JSON이 아닌 응답을 반환했습니다. "
+            f"status={response.status_code} body={preview!r}"
+        ) from direct_json_error
+
+
 def _post(payload: Dict) -> Dict:
     """POST to HUB and accept only a real JSON success response.
 
@@ -67,14 +93,7 @@ def _post(payload: Dict) -> Dict:
             )
             response.raise_for_status()
 
-            try:
-                data = response.json()
-            except ValueError as exc:
-                preview = _clean(response.text)[:300]
-                raise RuntimeError(
-                    "허브가 JSON이 아닌 응답을 반환했습니다. "
-                    f"status={response.status_code} body={preview!r}"
-                ) from exc
+            data = _parse_hub_response(response)
 
             if not isinstance(data, dict) or data.get("ok") is not True:
                 raise RuntimeError(f"허브 처리 실패: {data}")
