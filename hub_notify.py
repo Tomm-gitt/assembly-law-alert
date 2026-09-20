@@ -64,6 +64,35 @@ def _parse_hub_response(response) -> Dict:
             except (TypeError, ValueError):
                 pass
 
+        # Apps Script's current HtmlService sandbox wraps the config itself
+        # with JavaScript hex escapes, for example:
+        # \x22userHtml\x22:\x22\x7b\\\x22ok...
+        hex_wrapped = re.search(
+            r"\\x22userHtml\\x22:\\x22(.*?)\\x22,\\x22ncc\\x22",
+            body,
+            flags=re.DOTALL,
+        )
+        if hex_wrapped:
+            try:
+                embedded_text = re.sub(
+                    r"\\x([0-9a-fA-F]{2})",
+                    lambda match: chr(int(match.group(1), 16)),
+                    hex_wrapped.group(1),
+                )
+                for _ in range(4):
+                    unescaped = (
+                        embedded_text
+                        .replace('\\\\"', '\\"')
+                        .replace('\\"', '"')
+                        .replace('\\/', '/')
+                    )
+                    if unescaped == embedded_text:
+                        break
+                    embedded_text = unescaped
+                return json.loads(embedded_text)
+            except (TypeError, ValueError):
+                pass
+
         preview = _clean(body)[:300]
         raise RuntimeError(
             "허브가 JSON이 아닌 응답을 반환했습니다. "
