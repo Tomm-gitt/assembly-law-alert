@@ -48,3 +48,12 @@ Actions → `National Assembly Law Monitor` → Run workflow에서
 `최근 7일 매칭 건을 테스트 메일로 강제 발송`을 체크하면 최근 매칭 법률안을 테스트 메일로 받을 수 있습니다.
 
 체크하지 않고 실행하면 최초 실행 시 `seen_bills.json`만 초기화하고 과거 최근 7일 법률안은 메일로 보내지 않습니다.
+
+
+## Notification ownership (2026-09-24)
+
+Production runners submit new bills and lifecycle events to `legal-policy-hub`.
+`telegram_notify.py` is now a compatibility adapter to HUB; it cannot send directly.
+HUB owns judgment, tracking, holiday/calendar rules, next-working-day 06:30 delivery,
+initial-card ordering and durable delivery receipts. Collectors may still collect on holidays.
+Run `python -m unittest test_notification_contract` for offline notification-contract checks.
