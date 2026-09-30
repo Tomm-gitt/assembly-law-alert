@@ -45,6 +45,10 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Lifecycle regression gate
+        id: lifecycle_regressions
+        run: python -m unittest test_notification_contract test_lifecycle_delivery
+
       - name: Run new bill monitor
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
@@ -55,11 +59,13 @@ jobs:
         run: python run_with_network_retry.py telegram_enriched_runner.py
 
       - name: Discover legacy bills with new late-stage events
+        if: ${{ !cancelled() && steps.lifecycle_regressions.outcome == 'success' }}
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
         run: python run_with_network_retry.py late_stage_discovery.py
 
       - name: Run status change monitor
+        if: ${{ !cancelled() && steps.lifecycle_regressions.outcome == 'success' }}
         env:
           ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
@@ -67,12 +73,14 @@ jobs:
         run: python run_with_network_retry.py telegram_status_runner.py
 
       - name: Run promulgation and enforcement monitor
+        if: ${{ !cancelled() && steps.lifecycle_regressions.outcome == 'success' }}
         env:
           LAW_API_OC: ${{ secrets.LAW_API_OC }}
           HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
         run: python hub_law_effective_runner.py
 
       - name: Commit updated state
+        if: ${{ !cancelled() && steps.lifecycle_regressions.outcome == 'success' }}
         run: |
           if [ -z "$(git status --porcelain -- seen_bills.json late_stage_discovery_state.json)" ]; then
             echo "No state changes."
@@ -99,3 +107,4 @@ jobs:
 
           echo "State push failed after 3 attempts."
           exit 1
+

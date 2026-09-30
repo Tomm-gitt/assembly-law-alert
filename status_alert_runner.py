@@ -4,6 +4,7 @@ from datetime import datetime
 import requests
 
 import status_monitor
+import lifecycle_delivery
 from alternative_successor import is_alternative_reflection_result
 from post_plenary import fetch_post_plenary_status
 from successor_operations import register_verified_successor
@@ -108,6 +109,7 @@ def main() -> int:
     session.headers.update(status_monitor.monitor.HEADERS)
     now = datetime.now(status_monitor.monitor.KST).isoformat(timespec="seconds")
     alerts = []
+    query_failures = []
 
     try:
         # 실행 중 위원회 대안이 새로 seen에 추가될 수 있으므로 시작 시점 목록만 순회한다.
@@ -116,14 +118,20 @@ def main() -> int:
                 print(f"[INFO] 상태추적 제외: {entry.get('bill_no') or bill_id}")
                 continue
 
-            current_raw = status_monitor.fetch_lifecycle(session, bill_id, entry)
+            try:
+                current_raw = status_monitor.fetch_lifecycle(session, bill_id, entry)
+            except Exception as exc:
+                query_failures.append(entry.get("bill_no") or bill_id)
+                print(f"[ERROR] 상태조회 실패, 다른 의안 계속 처리: {entry.get('bill_no') or bill_id} / {exc}")
+                continue
             if not current_raw:
                 print(f"[WARN] 상태조회 실패/데이터 없음: {entry.get('bill_no') or bill_id}")
+                query_failures.append(entry.get("bill_no") or bill_id)
                 continue
 
             previous = entry.get("lifecycle") if isinstance(entry.get("lifecycle"), dict) else {}
             current = status_monitor.merge_snapshot(previous, current_raw)
-            changes = status_monitor.detect_changes(previous, current) if previous else []
+            changes = status_monitor.detect_changes(previous, current)
 
             # 이미 후속 대안으로 승계된 원의안은 상태만 갱신하고 이후 단계 알림은 보내지 않는다.
             # 이후 알림은 successor 의안번호를 기준으로만 이어간다.
@@ -249,21 +257,35 @@ def main() -> int:
                     f"현재 단계 {status_monitor.highest_stage(current)}"
                 )
 
-        status_monitor.monitor.save_seen(seen)
+            # Persist observed state and a distinct delivery intent before advancing.
+            try:
+                own_alerts = [a for a in alerts if a.get("bill_id") == bill_id]
+                for alert in own_alerts:
+                    lifecycle_delivery.enqueue(entry, alert, now, force=force_test)
+                if not own_alerts and not entry.get("alternative_reflection") and not _alternative_reflected(current_raw):
+                    lifecycle_delivery.enqueue(entry, {
+                        **entry, "bill_id": bill_id,
+                        "detail_link": current.get("detail_link"),
+                        "committee": current.get("committee"),
+                        "stage": status_monitor.highest_stage(current),
+                    }, now, force=force_test)
+                entry.pop("lifecycle_sync_error", None)
+            except ValueError as exc:
+                entry["lifecycle_sync_error"] = str(exc)
+                query_failures.append(entry.get("bill_no") or bill_id)
+                print(f"[ERROR] 상태일 검증 실패, 다른 의안 계속 처리: {entry.get('bill_no') or bill_id} / {exc}")
+            status_monitor.monitor.save_seen(seen)
 
-        if not alerts:
-            print("[INFO] 기존 의안 상태변경 없음: 메일을 발송하지 않습니다.")
-            return 0
-
-        status_monitor.send_email(alerts)
-        if force_test and all(alert.get("test_mode") for alert in alerts):
-            print(f"[INFO] 상태변경 테스트 메일 발송 완료: {len(alerts)}건")
-        else:
-            print(f"[INFO] 상태변경 메일 발송 완료: {len(alerts)}건")
+        failures = lifecycle_delivery.flush(seen, now)
+        if failures or query_failures:
+            raise RuntimeError(f"LIFECYCLE_PARTIAL_FAILURE: query={query_failures}, pending={failures}")
+        print("[INFO] 국회 상태 조회 및 HUB 일일 대조 완료")
         return 0
     finally:
+        status_monitor.monitor.save_seen(seen)
         session.close()
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

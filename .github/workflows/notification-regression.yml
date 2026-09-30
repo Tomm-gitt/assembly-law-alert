@@ -14,4 +14,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests
-      - run: python -m unittest test_notification_contract
+      - run: python -m unittest test_notification_contract test_lifecycle_delivery
+

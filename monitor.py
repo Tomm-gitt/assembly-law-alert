@@ -254,10 +254,12 @@ def load_seen() -> Dict[str, Dict]:
 
 
 def save_seen(seen: Dict[str, Dict]) -> None:
-    STATE_PATH.write_text(
+    temporary = STATE_PATH.with_suffix(".tmp")
+    temporary.write_text(
         json.dumps(seen, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    temporary.replace(STATE_PATH)
 
 
 def html_escape(value: Optional[str]) -> str:

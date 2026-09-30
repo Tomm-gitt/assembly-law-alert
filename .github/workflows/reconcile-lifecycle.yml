@@ -1,0 +1,51 @@
+name: Reconcile Assembly lifecycle with HUB
+on:
+  push:
+    branches: [main]
+    paths: ['lifecycle_delivery.py', '.github/workflows/reconcile-lifecycle.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: assembly-law-monitor-production
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Offline regressions
+        run: python -m unittest test_notification_contract test_lifecycle_delivery
+      - name: Require compatible production HUB
+        env:
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
+        run: |
+          python - <<'PY'
+          import hub_notify
+          r=hub_notify._post({'healthcheck':True})
+          assert r.get('lifecycleSyncVersion')=='2026-09-30-v1',r
+          print('Production lifecycle receipt contract verified')
+          PY
+      - name: Re-query official lifecycle and reconcile HUB
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
+        run: python run_with_network_retry.py telegram_status_runner.py
+      - name: Persist observations, pending events and receipts even after partial failure
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -z "$(git status --porcelain -- seen_bills.json)" ]; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add seen_bills.json
+          git commit -m "Persist lifecycle reconciliation receipts and pending events"
+          for attempt in 1 2 3; do
+            if git push; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1

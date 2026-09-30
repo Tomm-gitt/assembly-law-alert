@@ -32,8 +32,8 @@ def enrich_and_send_to_hub(bills):
     if not bills:
         return
 
-    enrich_bills(bills)
     try:
+        enrich_bills(bills)
         hub_notify.send_new_bills(bills)
     except Exception:
         _rollback_seen_for_failed_delivery(bills)
