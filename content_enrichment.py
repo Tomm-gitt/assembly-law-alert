@@ -398,13 +398,13 @@ def _build_ai_prompt(
 담당자가 모바일에서 읽기 쉬운 형태로 정리하십시오.
 
 중요 규칙:
-1. '초압축 요약'을 하지 마십시오. 원문 정보의 약 60~80%는 유지하는 보수적 요약을 하십시오.
+1. 모바일 판정카드용 간결한 요약을 작성하십시오. 원문 분량의 일정 비율을 유지할 필요는 없습니다. 반복 설명·관행적 표현·조문 인용을 줄이되 법적 의미는 보존하십시오.
 2. 원문에 없는 사실, 효과, 시행일, 의무를 추론하거나 추가하지 마십시오.
 3. 자사 관련 여부 자체는 판단하지 마십시오.
-4. 제안이유는 배경·현행 문제·입법 목적의 연결관계가 보이도록 2~4문장으로 정리하십시오.
+4. 제안이유는 현행 문제와 개정 목적만 한 문장, 보통 60~100자·최대 140자로 정리하십시오. 아래 주요내용의 조치를 다시 열거하지 마십시오.
 5. 주요내용은 원문의 독립된 변경사항을 하나도 누락하지 마십시오.
-6. 각 주요내용은 지나치게 짧은 명사형 문구로 축약하지 말고, 무엇이 어떻게 바뀌는지 이해할 수 있는 완결된 문장으로 작성하십시오.
-7. 조문번호, 적용대상, 요건, 예외, 기한, 금액, 비율, 횟수, 과태료·벌칙, 시행일·경과조치 등 실무 판단에 필요한 구체 정보는 원문에 있으면 반드시 보존하십시오.
+6. 각 주요내용은 주체·대상·조치·조건을 갖춘 짧은 문장으로 작성하고 신설·상향·연장·제외·요청 등 명사형과 마침표로 종결하십시오. 보통 항목당 50~100자, 복잡한 조건이 있는 항목은 최대 220자까지 허용합니다.
+7. 적용대상, 요건, 예외, 기산점, 기한, 금액, 비율, 횟수, 과태료·벌칙, 시행일·경과조치는 반드시 보존하십시오. 조문번호 인용은 생략할 수 있습니다. 서로 다른 기간의 기산점을 합치지 마십시오.
 8. 서로 다른 변경사항을 합쳐서 개수를 줄이지 마십시오. 원문이 가/나/다 3개면 원칙적으로 3개, 5개면 5개를 유지하십시오.
 9. mainItems 각 문자열 앞에는 '1.', '2.', '가.', '나.' 같은 번호나 불릿을 붙이지 마십시오. 번호는 시스템이 자동으로 붙입니다.
 10. 제목을 단순 반복하지 말고 실제 법률안 내용을 우선하십시오.
@@ -450,6 +450,25 @@ def _strip_item_prefix(text: str) -> str:
         value,
     )
     return value.strip()
+
+
+def validate_mobile_summary(parsed: Dict) -> None:
+    """Retry verbose or truncated candidates without slicing legal text."""
+    if not isinstance(parsed, dict) or not isinstance(parsed.get("reason"), str):
+        raise ValueError("AI_INVALID_SUMMARY")
+    items = parsed.get("mainItems")
+    if not isinstance(items, list) or not items or any(not isinstance(x, str) for x in items):
+        raise ValueError("AI_INVALID_ITEMS")
+    reason = clean_inline(parsed["reason"])
+    texts = [_strip_item_prefix(x) for x in items]
+    if not reason or any(not x for x in texts):
+        raise ValueError("AI_EMPTY_SUMMARY")
+    if any(not re.search(r"[.。]$", x) or re.search(r"…|\\.\\.\\.", x) for x in [reason, *texts]):
+        raise ValueError("AI_INCOMPLETE_SENTENCE")
+    if len(reason) > 140 or any(len(x) > 220 for x in texts):
+        raise ValueError("AI_SUMMARY_TOO_LONG")
+    if len(reason) + sum(map(len, texts)) > 140 + max(360, len(texts) * 120):
+        raise ValueError("AI_SUMMARY_TOO_LONG")
 
 
 def summarize_bill_with_ai(
@@ -531,6 +550,9 @@ def summarize_bill_with_ai(
                         "Gemini candidate 없음"
                     )
 
+                if candidates[0].get("finishReason") != "STOP":
+                    raise RuntimeError("AI_INCOMPLETE_RESPONSE")
+
                 parts = (
                     candidates[0]
                     .get("content", {})
@@ -539,12 +561,14 @@ def summarize_bill_with_ai(
                 response_text = "\n".join(
                     str(part.get("text") or "")
                     for part in parts
-                    if isinstance(part, dict)
+                    if isinstance(part, dict) and not part.get("thought")
                 ).strip()
 
                 parsed = _parse_gemini_json(
                     response_text
                 )
+
+                validate_mobile_summary(parsed)
 
                 ai_reason = clean_inline(
                     parsed.get("reason")
@@ -582,6 +606,7 @@ def summarize_bill_with_ai(
                     f"attempt={attempt}",
                     str(exc)[:500],
                 )
+                payload["contents"][0]["parts"][0]["text"] = prompt + "\n앞선 응답 거절: " + str(exc)[:200] + "\n핵심 조건을 생략하지 말고 중복 표현을 줄여 다시 작성하십시오."
                 if attempt < 2:
                     time.sleep(1.5 * attempt)
 
