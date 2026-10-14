@@ -1,4 +1,5 @@
 import json
+import hashlib
 import os
 import re
 import time
@@ -60,37 +61,22 @@ def build_lawmaking_url(bill: Dict) -> str:
 
 
 def _extract_relevant_segment(page_text: str) -> str:
-    candidates = [
-        "▶ 제안이유 및 주요내용",
-        "대안의 제안이유 및 주요내용",
-        "제안이유 및 주요내용",
-    ]
-
-    starts = []
-    for candidate in candidates:
-        pos = 0
-        while True:
-            idx = page_text.find(candidate, pos)
-            if idx < 0:
-                break
-            starts.append((idx, candidate))
-            pos = idx + len(candidate)
-
-    if not starts:
-        return ""
-
-    start, marker = max(starts, key=lambda x: x[0])
-    segment = page_text[start + len(marker):]
-
-    end_positions = []
-    for stop in STOP_MARKERS:
-        idx = segment.find(stop)
-        if idx > 0:
-            end_positions.append(idx)
-    if end_positions:
-        segment = segment[: min(end_positions)]
-
-    return clean_inline(segment)
+    # Headings are whole lines: never stop at a substantive sentence containing
+    # e.g. 공포 or 의안원문. Accommodate whitespace used by both official sites.
+    heading = re.compile(
+        r"(?m)^[ \t]*(?:[▶■]\s*)?(?:대안의\s*)?제안\s*이유\s*및\s*주요\s*내용[ \t]*$"
+    )
+    matches = list(heading.finditer(page_text))
+    if matches:
+        segment = page_text[matches[-1].end():]
+    else:
+        separate = re.search(r"(?m)^[ \t]*(?:[▶■]\s*)?제안\s*이유[ \t]*$", page_text)
+        if not separate:
+            return ""
+        segment = page_text[separate.start():]
+    stop_pattern = r"(?m)^[ \t]*(?:" + "|".join(map(re.escape, STOP_MARKERS)) + r")[ \t]*$"
+    stop = re.search(stop_pattern, segment)
+    return clean_inline(segment[:stop.start()] if stop else segment)
 
 
 def _find_combined_section_pivot(text: str):
@@ -117,7 +103,8 @@ def _split_reason_main(segment: str) -> Dict[str, str]:
     if not segment:
         return {"proposal_reason": "", "main_content": ""}
 
-    text = segment
+    text = re.sub(r"제안\s+이유", "제안이유", segment)
+    text = re.sub(r"주요\s+내용", "주요내용", text)
     text = re.sub(
         r"^(?:제안이유 및 주요내용|대안의 제안이유 및 주요내용)\s*",
         "",
@@ -156,7 +143,7 @@ def _extract_from_lawmaking_html(html: str) -> Dict[str, str]:
 
     for label in soup.find_all(["th", "dt", "strong", "span", "div"]):
         label_text = clean_inline(label.get_text(" ", strip=True))
-        if label_text != "제안이유 및 주요내용":
+        if re.sub(r"\s+", "", label_text) != "제안이유및주요내용":
             continue
 
         if label.name == "th":
@@ -189,8 +176,34 @@ def _extract_from_lawmaking_html(html: str) -> Dict[str, str]:
 def _get_html(session: requests.Session, url: str) -> str:
     response = session.get(url, timeout=30)
     response.raise_for_status()
+    if not response.content.strip():
+        raise ValueError("EMPTY_HTTP_BODY")
     response.encoding = response.apparent_encoding or response.encoding or "utf-8"
     return response.text
+
+
+def is_missing_content_claim(text: str) -> bool:
+    return bool(re.search(
+        r"(?:제안이유|주요내용|제안서 원문|원문 내용).{0,100}(?:명시되지 않|미기재|확인할 수 없|확인 불가|내용이 없)",
+        text, re.S,
+    ))
+
+
+def has_source_content(parts: Dict) -> bool:
+    text = clean_inline("\n".join(str(parts.get(k) or "") for k in ("proposal_reason", "main_content")))
+    # Require substantive Korean prose, not an empty heading or UI label.
+    return len(re.findall(r"[가-힣]", text)) >= 20 and not is_missing_content_claim(text)
+
+
+def _extraction_failure(html: str) -> str:
+    # A missing selector is NOT evidence that the official document is empty.
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text(" ", strip=True)
+    code = "SECTION_EMPTY_OR_UNPARSED" if re.search(r"제안\s*이유", text) else "SECTION_NOT_FOUND"
+    if re.search(r"접근.*차단|Access Denied|서비스.*점검|captcha", text, re.I):
+        code = "ACCESS_BLOCKED_OR_MAINTENANCE"
+    digest = hashlib.sha256(html.encode("utf-8")).hexdigest()
+    return f"{code}; html_chars={len(html)}; sha256={digest}"
 
 
 def fetch_bill_content(
@@ -217,10 +230,11 @@ def fetch_bill_content(
         lawmaking_url = build_lawmaking_url(bill)
         if lawmaking_url:
             try:
-                parts = _extract_from_lawmaking_html(
-                    _get_html(session, lawmaking_url)
-                )
-                if parts["proposal_reason"] or parts["main_content"]:
+                html = _get_html(session, lawmaking_url)
+                parts = _extract_from_lawmaking_html(html)
+                if not has_source_content(parts):
+                    raise ValueError(_extraction_failure(html))
+                if has_source_content(parts):
                     return {
                         **parts,
                         "content_source": "국민참여입법센터",
@@ -235,10 +249,8 @@ def fetch_bill_content(
         likms_url = build_detail_url(bill)
         if likms_url:
             try:
-                soup = BeautifulSoup(
-                    _get_html(session, likms_url),
-                    "html.parser",
-                )
+                html = _get_html(session, likms_url)
+                soup = BeautifulSoup(html, "html.parser")
                 for tag in soup(["script", "style", "noscript"]):
                     tag.decompose()
                 raw_text = clean_inline(
@@ -247,15 +259,13 @@ def fetch_bill_content(
                 parts = _split_reason_main(
                     _extract_relevant_segment(raw_text)
                 )
-                if parts["proposal_reason"] or parts["main_content"]:
+                if has_source_content(parts):
                     return {
                         **parts,
                         "content_source": "LIKMS",
                         "content_error": "",
                     }
-                errors.append(
-                    "LIKMS: 제안이유 및 주요내용 영역을 찾지 못했습니다."
-                )
+                errors.append("LIKMS: " + _extraction_failure(html))
             except Exception as exc:
                 errors.append(f"LIKMS: {exc}")
 
@@ -460,6 +470,8 @@ def validate_mobile_summary(parsed: Dict) -> None:
     if not isinstance(items, list) or not items or any(not isinstance(x, str) for x in items):
         raise ValueError("AI_INVALID_ITEMS")
     reason = clean_inline(parsed["reason"])
+    if any(is_missing_content_claim(x) for x in [reason, *items]):
+        raise ValueError("AI_UNSUPPORTED_MISSING_CONTENT_CLAIM")
     texts = [_strip_item_prefix(x) for x in items]
     if not reason or any(not x for x in texts):
         raise ValueError("AI_EMPTY_SUMMARY")
@@ -476,6 +488,12 @@ def summarize_bill_with_ai(
     reason: str,
     main: str,
 ) -> Dict:
+    if not has_source_content({"proposal_reason": reason, "main_content": main}):
+        return {"reason": "", "mainItems": [], "aiUsed": False, "aiModel": ""}
+    if not clean_inline(reason) or not clean_inline(main):
+        return {"reason": summarize_reason(reason), "mainItems": main_content_points(main),
+                "aiUsed": False, "aiModel": ""}
+
     api_key = str(
         os.getenv("GEMINI_API_KEY") or ""
     ).strip()
@@ -668,6 +686,12 @@ def enrich_bill(
         session=session,
     )
     bill.update(content)
+
+    bill["content_status"] = "EXTRACTED" if has_source_content(content) else "FAILED"
+    if bill["content_status"] == "FAILED":
+        bill.update(proposal_reason_summary="", main_content_points=[], ai_used=False, ai_model="")
+        bill["content"] = "■ 원문 수집 실패\n제안이유·주요내용을 수집하지 못했습니다. 원문 자체의 누락 여부는 확인되지 않았습니다.\n실패 원인: " + (content.get("content_error") or "NO_VERIFIED_SOURCE")
+        return bill
 
     summary = summarize_bill_with_ai(
         bill,

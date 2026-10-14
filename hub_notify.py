@@ -201,6 +201,9 @@ def build_new_bill_payload(bill: Dict) -> Dict:
             if _clean(point)
         ],
         "aiModel": _clean(bill.get("ai_model")),
+        "contentStatus": _clean(bill.get("content_status")),
+        "contentError": _clean(bill.get("content_error")),
+        "contentSource": _clean(bill.get("content_source")),
     }
 
 

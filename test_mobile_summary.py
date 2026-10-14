@@ -20,12 +20,12 @@ class Tests(unittest.TestCase):
  @patch.object(c.requests,'post')
  def test_retry_verbose(self,post,sleep):
   post.side_effect=[response(dict(VALID,reason='설명'*100+'.')),response(VALID)]
-  result=c.summarize_bill_with_ai({},'source','source')
+  result=c.summarize_bill_with_ai({},'현행 제도의 반복 위반에 대한 제재 수단이 부족하여 개선이 필요한 상황임.','반복 위반 사업자에 대한 처분 기준과 적용 요건을 명확하게 정비함.')
   self.assertTrue(result['aiUsed']);self.assertEqual(result['mainItems'],VALID['mainItems']);self.assertEqual(post.call_count,2)
  @patch.dict('os.environ',{'GEMINI_API_KEY':'test'})
  @patch.object(c.time,'sleep')
  @patch.object(c.requests,'post')
  def test_token_cutoff_retry(self,post,sleep):
   post.side_effect=[response(VALID,'MAX_TOKENS'),response(VALID)]
-  self.assertTrue(c.summarize_bill_with_ai({},'source','source')['aiUsed']);self.assertEqual(post.call_count,2)
+  self.assertTrue(c.summarize_bill_with_ai({},'현행 제도의 반복 위반에 대한 제재 수단이 부족하여 개선이 필요한 상황임.','반복 위반 사업자에 대한 처분 기준과 적용 요건을 명확하게 정비함.')['aiUsed']);self.assertEqual(post.call_count,2)
 if __name__=='__main__':unittest.main()
