@@ -3,7 +3,38 @@
     "bill_name": "하도급거래 공정화에 관한 법률 일부개정법률안",
     "bill_no": "2221800",
     "first_seen_at": "2026-10-07T06:33:51+09:00",
-    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_outbox": {
+      "ASSEMBLY_STAGE|국회|PRC_033ED77813EC4A3C9E1C676BC657B9|소관위원회 회부|2026-10-07": {
+        "attempts": 1,
+        "created_at": "2026-10-22T06:39:53+09:00",
+        "last_attempt_at": "2026-10-22T06:39:53+09:00",
+        "last_error": "통합 허브 전송 실패: 허브 처리 실패: {'ok': False, 'error': 'HUB_STATE_BUSY_RETRY'}",
+        "payload": {
+          "aiUsed": false,
+          "billNo": "2221800",
+          "committee": "정무위원회",
+          "currentStage": "소관위원회 회부",
+          "enforcementDate": "",
+          "eventType": "STATUS_CHANGE",
+          "lifecycleSync": "2026-09-30-v1",
+          "matchedKeywords": [
+            "하도급거래 공정화에 관한 법률"
+          ],
+          "matchedLaw": "하도급거래 공정화에 관한 법률",
+          "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_033ED77813EC4A3C9E1C676BC657B9&ageFrom=22&ageTo=22",
+          "promulgationDate": "",
+          "promulgationNo": "",
+          "proposer": "",
+          "proposerKind": "",
+          "publishedDate": "2026-10-06",
+          "sourceId": "PRC_033ED77813EC4A3C9E1C676BC657B9",
+          "sourceOrg": "국회",
+          "sourceType": "법률안 진행상태",
+          "stageDate": "2026-10-07",
+          "title": "하도급거래 공정화에 관한 법률 일부개정법률안"
+        }
+      }
+    },
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_033ED77813EC4A3C9E1C676BC657B9|발의/접수|2026-10-06": {
         "currentStage": "발의/접수",
@@ -25,7 +56,7 @@
       }
     },
     "last_status_changed_at": "2026-10-08T06:34:37+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-07",
@@ -43,6 +74,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221913",
     "first_seen_at": "2026-10-17T06:33:31+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_1CEC2CFEE9874A28BF5790D8A85F56|발의/접수|2026-10-16": {
         "currentStage": "발의/접수",
@@ -84,6 +116,7 @@
     "bill_name": "식품위생법 일부개정법률안",
     "bill_no": "2221754",
     "first_seen_at": "2026-10-03T06:33:33+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_46BB972AD92A4E3F9184984D7DCD9B|발의/접수|2026-10-02": {
         "currentStage": "발의/접수",
@@ -125,6 +158,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221749",
     "first_seen_at": "2026-10-03T06:33:33+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_6F27301521624A2C9378B1558C5DD2|발의/접수|2026-10-02": {
         "currentStage": "발의/접수",
@@ -166,6 +200,7 @@
     "bill_name": "소비자기본법 일부개정법률안",
     "bill_no": "2221598",
     "first_seen_at": "2026-09-29T06:33:36+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_83D6A8B87F8D4845948D1B1C7BA3AC|소관위원회 회부|2026-09-29": {
         "currentStage": "소관위원회 회부",
@@ -231,6 +266,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221860",
     "first_seen_at": "2026-10-13T06:33:38+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_9DCD75E9C9C842F7B3307DB8456A6A|발의/접수|2026-10-12": {
         "currentStage": "발의/접수",
@@ -273,9 +309,40 @@
     "bill_no": "2209375",
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
-    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_outbox": {
+      "ASSEMBLY_STAGE|국회|PRC_A2Z5X0Y2W1W2E1F1D2E6C5B8B2X6X2|소관위원회 회부|2025-03-27": {
+        "attempts": 1,
+        "created_at": "2026-10-22T06:39:53+09:00",
+        "last_attempt_at": "2026-10-22T06:39:53+09:00",
+        "last_error": "통합 허브 전송 실패: 허브 처리 실패: {'ok': False, 'error': 'HUB_STATE_BUSY_RETRY'}",
+        "payload": {
+          "aiUsed": false,
+          "billNo": "2209375",
+          "committee": "보건복지위원회",
+          "currentStage": "소관위원회 회부",
+          "enforcementDate": "",
+          "eventType": "STATUS_CHANGE",
+          "lifecycleSync": "2026-09-30-v1",
+          "matchedKeywords": [
+            "건강기능식품에 관한 법률"
+          ],
+          "matchedLaw": "건강기능식품에 관한 법률",
+          "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_A2Z5X0Y2W1W2E1F1D2E6C5B8B2X6X2&ageFrom=22&ageTo=22",
+          "promulgationDate": "",
+          "promulgationNo": "",
+          "proposer": "이개호",
+          "proposerKind": "",
+          "publishedDate": "2025-03-26",
+          "sourceId": "PRC_A2Z5X0Y2W1W2E1F1D2E6C5B8B2X6X2",
+          "sourceOrg": "국회",
+          "sourceType": "법률안 진행상태",
+          "stageDate": "2025-03-27",
+          "title": "건강기능식품에 관한 법률 일부개정법률안"
+        }
+      }
+    },
     "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2025-03-27",
@@ -286,6 +353,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "건강기능식품에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-03-26",
     "proposer": "이개호",
     "status_tracking": true
@@ -295,9 +363,40 @@
     "bill_no": "2215826",
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
-    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_outbox": {
+      "ASSEMBLY_STAGE|국회|PRC_B2A5W1W2U3V0T1U4S5T9B0B6Z0Y9Y7|소관위원회 회부|2026-01-02": {
+        "attempts": 1,
+        "created_at": "2026-10-22T06:39:53+09:00",
+        "last_attempt_at": "2026-10-22T06:39:53+09:00",
+        "last_error": "통합 허브 전송 실패: 허브 처리 실패: {'ok': False, 'error': 'HUB_STATE_BUSY_RETRY'}",
+        "payload": {
+          "aiUsed": false,
+          "billNo": "2215826",
+          "committee": "정무위원회",
+          "currentStage": "소관위원회 회부",
+          "enforcementDate": "",
+          "eventType": "STATUS_CHANGE",
+          "lifecycleSync": "2026-09-30-v1",
+          "matchedKeywords": [
+            "가맹사업거래의 공정화에 관한 법률"
+          ],
+          "matchedLaw": "가맹사업거래의 공정화에 관한 법률",
+          "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_B2A5W1W2U3V0T1U4S5T9B0B6Z0Y9Y7&ageFrom=22&ageTo=22",
+          "promulgationDate": "",
+          "promulgationNo": "",
+          "proposer": "이정문",
+          "proposerKind": "",
+          "publishedDate": "2025-12-31",
+          "sourceId": "PRC_B2A5W1W2U3V0T1U4S5T9B0B6Z0Y9Y7",
+          "sourceOrg": "국회",
+          "sourceType": "법률안 진행상태",
+          "stageDate": "2026-01-02",
+          "title": "가맹사업거래의 공정화에 관한 법률 일부개정법률안"
+        }
+      }
+    },
     "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-02",
@@ -308,6 +407,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-12-31",
     "proposer": "이정문",
     "status_tracking": true
@@ -316,6 +416,7 @@
     "bill_name": "종자산업법 일부개정법률안",
     "bill_no": "2221152",
     "first_seen_at": "2026-09-10T06:33:35+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_B2C6A0B9J0J2I0G9H3F5G5V6V4T2S6|소관위원회 회부|2026-09-09": {
         "currentStage": "소관위원회 회부",
@@ -348,9 +449,40 @@
     "bill_no": "2219718",
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
-    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_outbox": {
+      "ASSEMBLY_STAGE|국회|PRC_B2C6K0K7I0H1H1F1H1V6W2U5T6T5R5|소관위원회 회부|2026-07-06": {
+        "attempts": 1,
+        "created_at": "2026-10-22T06:39:53+09:00",
+        "last_attempt_at": "2026-10-22T06:39:53+09:00",
+        "last_error": "통합 허브 전송 실패: 허브 처리 실패: {'ok': False, 'error': 'HUB_STATE_BUSY_RETRY'}",
+        "payload": {
+          "aiUsed": false,
+          "billNo": "2219718",
+          "committee": "정무위원회",
+          "currentStage": "소관위원회 회부",
+          "enforcementDate": "",
+          "eventType": "STATUS_CHANGE",
+          "lifecycleSync": "2026-09-30-v1",
+          "matchedKeywords": [
+            "가맹사업거래의 공정화에 관한 법률"
+          ],
+          "matchedLaw": "가맹사업거래의 공정화에 관한 법률",
+          "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_B2C6K0K7I0H1H1F1H1V6W2U5T6T5R5&ageFrom=22&ageTo=22",
+          "promulgationDate": "",
+          "promulgationNo": "",
+          "proposer": "이강일",
+          "proposerKind": "",
+          "publishedDate": "2026-07-03",
+          "sourceId": "PRC_B2C6K0K7I0H1H1F1H1V6W2U5T6T5R5",
+          "sourceOrg": "국회",
+          "sourceType": "법률안 진행상태",
+          "stageDate": "2026-07-06",
+          "title": "가맹사업거래의 공정화에 관한 법률 일부개정법률안"
+        }
+      }
+    },
     "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-06",
@@ -361,6 +493,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-07-03",
     "proposer": "이강일",
     "status_tracking": true
@@ -404,6 +537,7 @@
     "bill_name": "소비자기본법 일부개정법률안",
     "bill_no": "2221911",
     "first_seen_at": "2026-10-17T06:33:31+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_B591F7F29A1D4C3480FCD8920C4940|발의/접수|2026-10-16": {
         "currentStage": "발의/접수",
@@ -445,6 +579,7 @@
     "bill_name": "표시·광고의 공정화에 관한 법률 일부개정법률안",
     "bill_no": "2221601",
     "first_seen_at": "2026-09-29T06:33:36+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_C1054F64ACFD46E9B1C9983DAAA6C3|소관위원회 회부|2026-09-29": {
         "currentStage": "소관위원회 회부",
@@ -479,8 +614,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_C2B5A0I9J1H2G1F1N3M4K0J9K8S9R6|소관위원회 회부|2025-09-17": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_C2B5A0I9J1H2G1F1N3M4K0J9K8S9R6|소관위원회 회부|2025-09-17",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_C2B5A0I9J1H2G1F1N3M4K0J9K8S9R6",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-17",
@@ -491,6 +636,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-09-16",
     "proposer": "이강일",
     "status_tracking": true
@@ -501,8 +647,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_C2Z4H0H7N1M8L1K0Q0P4O4X9U5T0Q2|소관위원회 회부|2024-09-11": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_C2Z4H0H7N1M8L1K0Q0P4O4X9U5T0Q2|소관위원회 회부|2024-09-11",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_C2Z4H0H7N1M8L1K0Q0P4O4X9U5T0Q2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-11",
@@ -513,6 +669,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-09-10",
     "proposer": "김한규",
     "status_tracking": true
@@ -523,8 +680,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_D2B6C0A2B2W5X1V0W4U8U5T2B3B0A7|소관위원회 회부|2026-03-03": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_D2B6C0A2B2W5X1V0W4U8U5T2B3B0A7|소관위원회 회부|2026-03-03",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_D2B6C0A2B2W5X1V0W4U8U5T2B3B0A7",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-03",
@@ -535,6 +702,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-02-27",
     "proposer": "허영",
     "status_tracking": true
@@ -545,8 +713,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_D2E5M0M6L1L1J1K4J2Q2R3P4Q6O0P6|소관위원회 회부|2025-06-13": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_D2E5M0M6L1L1J1K4J2Q2R3P4Q6O0P6|소관위원회 회부|2025-06-13",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_D2E5M0M6L1L1J1K4J2Q2R3P4Q6O0P6",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-06-13",
@@ -557,6 +735,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-06-12",
     "proposer": "박정훈",
     "status_tracking": true
@@ -573,12 +752,12 @@
         "outcome": "UNCHANGED",
         "projectionsConsistent": true,
         "systemKey": "국회|PRC_D2E6C0B9B0X7X1W3X4V4V1T7C7C2A2",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
     "last_status_changed_at": "2026-09-11T06:34:32+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-10",
@@ -598,8 +777,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_E2F5N1N1L0M4L1J3J3F2F2E6F7D1D1|소관위원회 회부|2025-11-17": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_E2F5N1N1L0M4L1J3J3F2F2E6F7D1D1|소관위원회 회부|2025-11-17",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_E2F5N1N1L0M4L1J3J3F2F2E6F7D1D1",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-11-17",
@@ -610,6 +799,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-11-14",
     "proposer": "이강일",
     "status_tracking": true
@@ -618,6 +808,7 @@
     "bill_name": "자원의 절약과 재활용촉진에 관한 법률 일부개정법률안",
     "bill_no": "2221939",
     "first_seen_at": "2026-10-17T06:33:31+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_E8085F311EF24B9D8EE6B2E18108BE|발의/접수|2026-10-16": {
         "currentStage": "발의/접수",
@@ -661,8 +852,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_F2D4D0C6C0Y7W1X3V5W9U3V8D2D8C5|소관위원회 회부|2024-06-12": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_F2D4D0C6C0Y7W1X3V5W9U3V8D2D8C5|소관위원회 회부|2024-06-12",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_F2D4D0C6C0Y7W1X3V5W9U3V8D2D8C5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "농림축산식품해양수산위원회",
       "committee_referral_date": "2024-06-12",
@@ -673,6 +874,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "인삼산업법",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-11",
     "proposer": "황명선",
     "status_tracking": true
@@ -681,6 +883,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221534",
     "first_seen_at": "2026-09-23T06:33:45+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_F2D6E0C9B0B4J1J4I5J9H2H1G9O0O6|소관위원회 회부|2026-09-23": {
         "currentStage": "소관위원회 회부",
@@ -715,8 +918,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_F2F4E0C6D1B2C1J0K3I9J4H1G2G5O0|소관위원회 회부|2024-06-27": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_F2F4E0C6D1B2C1J0K3I9J4H1G2G5O0|소관위원회 회부|2024-06-27",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_F2F4E0C6D1B2C1J0K3I9J4H1G2G5O0",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -727,6 +940,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-20",
     "proposer": "김한규",
     "status_tracking": true
@@ -737,8 +951,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_F2F5B0Y8X1G1C1C0L3H6Y1X6E2D6C7|소관위원회 회부|2025-09-17": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_F2F5B0Y8X1G1C1C0L3H6Y1X6E2D6C7|소관위원회 회부|2025-09-17",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_F2F5B0Y8X1G1C1C0L3H6Y1X6E2D6C7",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-17",
@@ -749,6 +973,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-09-16",
     "proposer": "안철수",
     "status_tracking": true
@@ -765,11 +990,11 @@
         "projectionsConsistent": false,
         "registered": false,
         "systemKey": "국회|PRC_H2I6G0G7F0G7N1O4M4L8L4K0K9G6H6",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -789,8 +1014,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_I2G6E0F3N0O9M1N3L5L3J3S1S6Q7R7|소관위원회 회부|2026-03-19": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_I2G6E0F3N0O9M1N3L5L3J3S1S6Q7R7|소관위원회 회부|2026-03-19",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_I2G6E0F3N0O9M1N3L5L3J3S1S6Q7R7",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-19",
@@ -801,6 +1036,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-03-18",
     "proposer": "허영",
     "status_tracking": true
@@ -811,8 +1047,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_I2G6G0F7G0E1M1M1L1M5K3K6J4Y9Y0|소관위원회 회부|2026-07-03": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_I2G6G0F7G0E1M1M1L1M5K3K6J4Y9Y0|소관위원회 회부|2026-07-03",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_I2G6G0F7G0E1M1M1L1M5K3K6J4Y9Y0",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-03",
@@ -823,6 +1069,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-07-02",
     "proposer": "이강일",
     "status_tracking": true
@@ -833,8 +1080,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_I2J4I0I7H0F1F1B2C0A4B1Z3X5Y5G9|소관위원회 회부|2024-07-11": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_I2J4I0I7H0F1F1B2C0A4B1Z3X5Y5G9|소관위원회 회부|2024-07-11",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_I2J4I0I7H0F1F1B2C0A4B1Z3X5Y5G9",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-07-11",
@@ -845,6 +1102,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-07-10",
     "proposer": "이강일",
     "status_tracking": true
@@ -855,8 +1113,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_I2J6H0P3O1P9O1M9N5M8K1T4R9S6Q5|소관위원회 회부|2026-03-26": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_I2J6H0P3O1P9O1M9N5M8K1T4R9S6Q5|소관위원회 회부|2026-03-26",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_I2J6H0P3O1P9O1M9N5M8K1T4R9S6Q5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-03-26",
@@ -867,6 +1135,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "식품위생법",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-03-25",
     "proposer": "안상훈",
     "status_tracking": true
@@ -875,6 +1144,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221089",
     "first_seen_at": "2026-09-05T06:33:49+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_I2J6I0I8D3C1D1B5B1A9B5I7J3I0G0|소관위원회 회부|2026-09-07": {
         "currentStage": "소관위원회 회부",
@@ -909,8 +1179,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_J2J5H0J8H2H6D1B5C4B6B4Z9A1I0G2|소관위원회 회부|2026-07-01": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_J2J5H0J8H2H6D1B5C4B6B4Z9A1I0G2|소관위원회 회부|2026-07-01",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_J2J5H0J8H2H6D1B5C4B6B4Z9A1I0G2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-01",
@@ -921,6 +1201,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-06-08",
     "proposer": "이준석",
     "status_tracking": true
@@ -931,8 +1212,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_K2J4H0G6C0C4B1Z6H4H9F1O9N3M1K0|소관위원회 회부|2024-06-27": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_K2J4H0G6C0C4B1Z6H4H9F1O9N3M1K0|소관위원회 회부|2024-06-27",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_K2J4H0G6C0C4B1Z6H4H9F1O9N3M1K0",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -943,6 +1234,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-10",
     "proposer": "민형배",
     "status_tracking": true
@@ -951,7 +1243,38 @@
     "bill_name": "가맹사업거래의 공정화에 관한 법률 일부개정법률안",
     "bill_no": "2221449",
     "first_seen_at": "2026-09-21T06:33:30+09:00",
-    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_outbox": {
+      "ASSEMBLY_STAGE|국회|PRC_L2J6J0I9G1H8O0Q9O0O7M1L9M8T3U9|소관위원회 회부|2026-09-21": {
+        "attempts": 1,
+        "created_at": "2026-10-22T06:39:53+09:00",
+        "last_attempt_at": "2026-10-22T06:39:53+09:00",
+        "last_error": "통합 허브 전송 실패: 허브 처리 실패: {'ok': False, 'error': 'LIFECYCLE_IDENTITY_MISMATCH'}",
+        "payload": {
+          "aiUsed": false,
+          "billNo": "2221449",
+          "committee": "정무위원회",
+          "currentStage": "소관위원회 회부",
+          "enforcementDate": "",
+          "eventType": "STATUS_CHANGE",
+          "lifecycleSync": "2026-09-30-v1",
+          "matchedKeywords": [
+            "가맹사업거래의 공정화에 관한 법률"
+          ],
+          "matchedLaw": "가맹사업거래의 공정화에 관한 법률",
+          "originalUrl": "https://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_L2J6J0I9G1H8O0Q9O0O7M1L9M8T3U9&ageFrom=22&ageTo=22",
+          "promulgationDate": "",
+          "promulgationNo": "",
+          "proposer": "",
+          "proposerKind": "",
+          "publishedDate": "2026-09-18",
+          "sourceId": "PRC_L2J6J0I9G1H8O0Q9O0O7M1L9M8T3U9",
+          "sourceOrg": "국회",
+          "sourceType": "법률안 진행상태",
+          "stageDate": "2026-09-21",
+          "title": "가맹사업거래의 공정화에 관한 법률 일부개정법률안"
+        }
+      }
+    },
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_L2J6J0I9G1H8O0Q9O0O7M1L9M8T3U9|소관위원회 회부|2026-09-21": {
         "currentStage": "소관위원회 회부",
@@ -964,7 +1287,7 @@
       }
     },
     "last_status_changed_at": "2026-09-22T06:34:29+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-21",
@@ -984,8 +1307,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_L2U6S0R3Q1Q9F1G9E5D6C4K4K3J1I8|소관위원회 회부|2026-03-26": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_L2U6S0R3Q1Q9F1G9E5D6C4K4K3J1I8|소관위원회 회부|2026-03-26",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_L2U6S0R3Q1Q9F1G9E5D6C4K4K3J1I8",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-03-26",
@@ -996,6 +1329,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "건강기능식품에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-03-25",
     "proposer": "안상훈",
     "status_tracking": true
@@ -1006,8 +1340,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_M2A5B0Z4A2Y3Z1X7F1G1E2F9D4E5C3|소관위원회 회부|2025-04-28": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_M2A5B0Z4A2Y3Z1X7F1G1E2F9D4E5C3|소관위원회 회부|2025-04-28",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_M2A5B0Z4A2Y3Z1X7F1G1E2F9D4E5C3",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-04-28",
@@ -1018,6 +1362,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-04-25",
     "proposer": "이강일",
     "status_tracking": true
@@ -1026,6 +1371,7 @@
     "bill_name": "표시·광고의 공정화에 관한 법률 일부개정법률안",
     "bill_no": "2221426",
     "first_seen_at": "2026-09-21T06:33:30+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_M2K6K0J8K0I5Q1R5P2Q4O3O7N9J0J8|소관위원회 회부|2026-09-18": {
         "currentStage": "소관위원회 회부",
@@ -1065,12 +1411,12 @@
         "projectionsConsistent": false,
         "registered": false,
         "systemKey": "국회|PRC_M2L6L0J9F0G8E1F1D1E2C5K7L8J8K7",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
     "last_status_changed_at": "2026-09-15T06:35:05+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-14",
@@ -1123,8 +1469,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_M2M5U1U1T2R8S1Q4Q3M1N2L9M1K3J8|소관위원회 회부|2025-12-12": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_M2M5U1U1T2R8S1Q4Q3M1N2L9M1K3J8|소관위원회 회부|2025-12-12",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_M2M5U1U1T2R8S1Q4Q3M1N2L9M1K3J8",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-12",
@@ -1135,6 +1491,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-12-11",
     "proposer": "이정문",
     "status_tracking": true
@@ -1145,8 +1502,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_N2N6M0N2U2V5T1S0S4R6R1H5H3G9H9|소관위원회 회부|2026-03-04": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_N2N6M0N2U2V5T1S0S4R6R1H5H3G9H9|소관위원회 회부|2026-03-04",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_N2N6M0N2U2V5T1S0S4R6R1H5H3G9H9",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-04",
@@ -1157,6 +1524,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-03-03",
     "proposer": "허영",
     "status_tracking": true
@@ -1167,8 +1535,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_N2U4W0D6A1J9H1O8L0G5E2P6M1T5R5|소관위원회 회부|2024-06-28": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_N2U4W0D6A1J9H1O8L0G5E2P6M1T5R5|소관위원회 회부|2024-06-28",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_N2U4W0D6A1J9H1O8L0G5E2P6M1T5R5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-28",
@@ -1179,6 +1557,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-27",
     "proposer": "문진석",
     "status_tracking": true
@@ -1189,8 +1568,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_O2M5N1M2K2L4S1T7R1S2Q4R3P5Q1F5|소관위원회 회부|2026-01-02": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_O2M5N1M2K2L4S1T7R1S2Q4R3P5Q1F5|소관위원회 회부|2026-01-02",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_O2M5N1M2K2L4S1T7R1S2Q4R3P5Q1F5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-01-02",
@@ -1201,6 +1590,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "식품위생법",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-12-31",
     "proposer": "정점식",
     "status_tracking": true
@@ -1217,12 +1607,12 @@
         "projectionsConsistent": false,
         "registered": false,
         "systemKey": "국회|PRC_O2O6M0C7C1B6B1Z4A2Z9Z1H8H5G9E0",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -1240,6 +1630,7 @@
     "bill_name": "식품위생법 일부개정법률안",
     "bill_no": "2220991",
     "first_seen_at": "2026-09-02T06:33:31+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_O2O6M0N8L1M8U1U1T0R0S5Q2Q4Z5Z0|소관위원회 회부|2026-09-02": {
         "currentStage": "소관위원회 회부",
@@ -1274,8 +1665,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_P2O4W0W6U1V0U0U8S5T2B0Z7A9Y9Z1|소관위원회 회부|2024-06-27": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_P2O4W0W6U1V0U0U8S5T2B0Z7A9Y9Z1|소관위원회 회부|2024-06-27",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_P2O4W0W6U1V0U0U8S5T2B0Z7A9Y9Z1",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -1286,6 +1687,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-11",
     "proposer": "한병도",
     "status_tracking": true
@@ -1296,8 +1698,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_P2P4O0N5L3U1S1T6A1Z9X3G8E4D3C5|소관위원회 회부|2024-12-24": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_P2P4O0N5L3U1S1T6A1Z9X3G8E4D3C5|소관위원회 회부|2024-12-24",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_P2P4O0N5L3U1S1T6A1Z9X3G8E4D3C5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-12-24",
@@ -1308,6 +1720,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-12-23",
     "proposer": "이학영",
     "status_tracking": true
@@ -1318,8 +1731,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_P2P6Y0Y1W0X8V1W5U4C5D4B8B8A0A7|소관위원회 회부|2026-01-13": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_P2P6Y0Y1W0X8V1W5U4C5D4B8B8A0A7|소관위원회 회부|2026-01-13",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_P2P6Y0Y1W0X8V1W5U4C5D4B8B8A0A7",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-13",
@@ -1330,6 +1753,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-01-12",
     "proposer": "김남근",
     "status_tracking": true
@@ -1340,8 +1764,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Q2N4M0V7B1A8Z1Y0U0T4Q0Z7Y1H3G2|소관위원회 회부|2024-09-09": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Q2N4M0V7B1A8Z1Y0U0T4Q0Z7Y1H3G2|소관위원회 회부|2024-09-09",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Q2N4M0V7B1A8Z1Y0U0T4Q0Z7Y1H3G2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-09",
@@ -1352,6 +1786,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-09-06",
     "proposer": "김한규",
     "status_tracking": true
@@ -1362,8 +1797,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Q2Q6Y0Y2X0Y9W1W6V0D7D3C4C9A5B2|소관위원회 회부|2026-03-03": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Q2Q6Y0Y2X0Y9W1W6V0D7D3C4C9A5B2|소관위원회 회부|2026-03-03",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Q2Q6Y0Y2X0Y9W1W6V0D7D3C4C9A5B2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-03",
@@ -1374,6 +1819,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-02-27",
     "proposer": "최혁진",
     "status_tracking": true
@@ -1382,6 +1828,7 @@
     "bill_name": "자원의 절약과 재활용촉진에 관한 법률 일부개정법률안",
     "bill_no": "2221076",
     "first_seen_at": "2026-09-04T06:33:35+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_R2P6P0O8P2K5L1J5H4I1G2H8P5P1O0|소관위원회 회부|2026-09-04": {
         "currentStage": "소관위원회 회부",
@@ -1414,6 +1861,7 @@
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
     "bill_no": "2221375",
     "first_seen_at": "2026-09-15T06:33:38+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_R2Q6X0Y9W1X0V1W9U1V2K3I7J0H5H9|소관위원회 회부|2026-09-15": {
         "currentStage": "소관위원회 회부",
@@ -1448,8 +1896,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_R2Z6A0Y2Y1W2V1W0D3E6C1D5B4C1A9|소관위원회 회부|2026-02-13": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_R2Z6A0Y2Y1W2V1W0D3E6C1D5B4C1A9|소관위원회 회부|2026-02-13",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_R2Z6A0Y2Y1W2V1W0D3E6C1D5B4C1A9",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-02-13",
@@ -1460,6 +1918,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-02-12",
     "proposer": "이정문",
     "status_tracking": true
@@ -1470,8 +1929,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_S2A5Z0Z8Y2W0F0D9E3J5F0D6C7C1B8|소관위원회 회부|2025-09-04": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_S2A5Z0Z8Y2W0F0D9E3J5F0D6C7C1B8|소관위원회 회부|2025-09-04",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_S2A5Z0Z8Y2W0F0D9E3J5F0D6C7C1B8",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-04",
@@ -1482,6 +1951,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-09-03",
     "proposer": "윤준병",
     "status_tracking": true
@@ -1490,6 +1960,7 @@
     "bill_name": "식품위생법 일부개정법률안",
     "bill_no": "2221536",
     "first_seen_at": "2026-09-23T06:33:45+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_S2B6Z0Z9X2Y1X1X0F4F9E1C1D7B4C7|소관위원회 회부|2026-09-23": {
         "currentStage": "소관위원회 회부",
@@ -1524,8 +1995,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_S2R4A0Z7Y1E8D1H0E0D3L2K7K0I1E3|소관위원회 회부|2024-09-05": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_S2R4A0Z7Y1E8D1H0E0D3L2K7K0I1E3|소관위원회 회부|2024-09-05",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_S2R4A0Z7Y1E8D1H0E0D3L2K7K0I1E3",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-05",
@@ -1536,6 +2017,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-09-04",
     "proposer": "김한규",
     "status_tracking": true
@@ -1546,8 +2028,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_S2T6R0S4Q0Y6Z1X0X5W8X2V1D1D0C7|소관위원회 회부|2026-04-13": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_S2T6R0S4Q0Y6Z1X0X5W8X2V1D1D0C7|소관위원회 회부|2026-04-13",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_S2T6R0S4Q0Y6Z1X0X5W8X2V1D1D0C7",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-04-13",
@@ -1558,6 +2050,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-04-10",
     "proposer": "윤한홍",
     "status_tracking": true
@@ -1574,11 +2067,11 @@
         "outcome": "UNCHANGED",
         "projectionsConsistent": true,
         "systemKey": "국회|PRC_T2R6S0R9R0Q2X1Y3X2X0V2U5U0C8D9",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-09",
@@ -1598,8 +2091,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_T2S5Q0Y3Z2A0Z1X5W1E8E3D1C4A7I8|소관위원회 회부|2025-04-11": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_T2S5Q0Y3Z2A0Z1X5W1E8E3D1C4A7I8|소관위원회 회부|2025-04-11",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_T2S5Q0Y3Z2A0Z1X5W1E8E3D1C4A7I8",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-04-11",
@@ -1610,6 +2113,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-04-10",
     "proposer": "정일영",
     "status_tracking": true
@@ -1618,6 +2122,7 @@
     "bill_name": "식품위생법 일부개정법률안",
     "bill_no": "2221340",
     "first_seen_at": "2026-09-12T06:33:33+09:00",
+    "hub_lifecycle_outbox": {},
     "hub_lifecycle_receipts": {
       "ASSEMBLY_STAGE|국회|PRC_T2U6S0T9R1P0Q0Y9Y2X9X4V2W0V9C3|소관위원회 회부|2026-09-14": {
         "eventKey": "ASSEMBLY_STAGE|국회|PRC_T2U6S0T9R1P0Q0Y9Y2X9X4V2W0V9C3|소관위원회 회부|2026-09-14",
@@ -1652,8 +2157,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_U2S5T0R6R1Q8Q1Y1Z3X0Y5W1V5V7D9|소관위원회 회부|2025-07-21": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_U2S5T0R6R1Q8Q1Y1Z3X0Y5W1V5V7D9|소관위원회 회부|2025-07-21",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_U2S5T0R6R1Q8Q1Y1Z3X0Y5W1V5V7D9",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2025-07-21",
@@ -1664,6 +2179,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "식품위생법",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-07-18",
     "proposer": "박희승",
     "status_tracking": true
@@ -1709,8 +2225,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_X2E4D0C9D2B7X1W0X4V9U1C4D2B3A0|소관위원회 회부|2024-11-06": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_X2E4D0C9D2B7X1W0X4V9U1C4D2B3A0|소관위원회 회부|2024-11-06",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_X2E4D0C9D2B7X1W0X4V9U1C4D2B3A0",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-11-06",
@@ -1721,6 +2247,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-11-05",
     "proposer": "유영하",
     "status_tracking": true
@@ -1731,8 +2258,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_X2V5T1U1C2C7A1B1Z1A7Y2Z3H5H8F9|소관위원회 회부|2025-12-10": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_X2V5T1U1C2C7A1B1Z1A7Y2Z3H5H8F9|소관위원회 회부|2025-12-10",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_X2V5T1U1C2C7A1B1Z1A7Y2Z3H5H8F9",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-10",
@@ -1743,6 +2280,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-12-09",
     "proposer": "박성훈",
     "status_tracking": true
@@ -1753,8 +2291,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_X2X5V1W1E0F3D1D7B2A0B4I9J4H0I6|소관위원회 회부|2025-11-12": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_X2X5V1W1E0F3D1D7B2A0B4I9J4H0I6|소관위원회 회부|2025-11-12",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_X2X5V1W1E0F3D1D7B2A0B4I9J4H0I6",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-11-12",
@@ -1765,6 +2313,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-11-11",
     "proposer": "오세희",
     "status_tracking": true
@@ -1781,12 +2330,12 @@
         "outcome": "UNCHANGED",
         "projectionsConsistent": true,
         "systemKey": "국회|PRC_X2X6W0W8V0T7U1C7C2A4Z3A3Y7Z6H5",
-        "verified_at": "2026-10-21T06:34:20+09:00",
+        "verified_at": "2026-10-22T06:39:53+09:00",
         "version": "2026-09-30-v1"
       }
     },
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-10-21T16:04:38+09:00",
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-02",
@@ -1806,8 +2355,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Y2Z4H0F5E3D1E1M6L2J0N4M8K2S3T2|소관위원회 회부|2024-06-27": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Y2Z4H0F5E3D1E1M6L2J0N4M8K2S3T2|소관위원회 회부|2024-06-27",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Y2Z4H0F5E3D1E1M6L2J0N4M8K2S3T2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -1818,6 +2377,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2024-06-24",
     "proposer": "이학영",
     "status_tracking": true
@@ -1828,8 +2388,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Y2Z6H0F1G2E7E1C4E5L7M2K8L9J6H5|소관위원회 회부|2026-01-29": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Y2Z6H0F1G2E7E1C4E5L7M2K8L9J6H5|소관위원회 회부|2026-01-29",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Y2Z6H0F1G2E7E1C4E5L7M2K8L9J6H5",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-29",
@@ -1840,6 +2410,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-01-28",
     "proposer": "민형배",
     "status_tracking": true
@@ -1850,8 +2421,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Z2A5Y0Y1X1V4D1C4A4B0J5J0H2G4H6|소관위원회 회부|2025-01-16": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Z2A5Y0Y1X1V4D1C4A4B0J5J0H2G4H6|소관위원회 회부|2025-01-16",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Z2A5Y0Y1X1V4D1C4A4B0J5J0H2G4H6",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-01-16",
@@ -1862,6 +2443,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-01-15",
     "proposer": "허영",
     "status_tracking": true
@@ -1872,8 +2454,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Z2A6Y0X1X1N5O1M0M0K0M2K6K1S6T0|소관위원회 회부|2026-01-19": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Z2A6Y0X1X1N5O1M0M0K0M2K6K1S6T0|소관위원회 회부|2026-01-19",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Z2A6Y0X1X1N5O1M0M0K0M2K6K1S6T0",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-19",
@@ -1884,6 +2476,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-01-16",
     "proposer": "윤한홍",
     "status_tracking": true
@@ -1894,8 +2487,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Z2X5Y1G2E0F4D1D7B5D5Y3Z1X4X1W2|소관위원회 회부|2025-12-23": {
+        "currentStage": "소관위원회 상정",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Z2X5Y1G2E0F4D1D7B5D5Y3Z1X4X1W2|소관위원회 회부|2025-12-23",
+        "outcome": "SUPERSEDED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Z2X5Y1G2E0F4D1D7B5D5Y3Z1X4X1W2",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-23",
@@ -1906,6 +2509,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2025-12-22",
     "proposer": "박범계",
     "status_tracking": true
@@ -1916,8 +2520,18 @@
     "historical_baseline": "HISTORICAL_O_BASELINE_20261021",
     "historical_baseline_initialized_at": "2026-10-21T18:10:41+09:00",
     "hub_lifecycle_outbox": {},
-    "hub_lifecycle_receipts": {},
-    "last_status_checked_at": "2026-10-21T18:10:41+09:00",
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_Z2X6W0X6E1F2D1E7C1D5B4C3Y3W0W8|소관위원회 회부|2026-07-01": {
+        "currentStage": "소관위원회 회부",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_Z2X6W0X6E1F2D1E7C1D5B4C3Y3W0W8|소관위원회 회부|2026-07-01",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_Z2X6W0X6E1F2D1E7C1D5B4C3Y3W0W8",
+        "verified_at": "2026-10-22T06:39:53+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-10-22T06:39:53+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-01",
@@ -1928,6 +2542,7 @@
     },
     "lifecycle_initialized_at": "2026-10-21T18:10:41+09:00",
     "matched_law": "가맹사업거래의 공정화에 관한 법률",
+    "post_plenary_master_initialized_at": "2026-10-22T06:57:20+09:00",
     "proposal_date": "2026-06-19",
     "proposer": "김남근",
     "status_tracking": true
