@@ -99,6 +99,7 @@ def _escalation_change(entry, now):
 
 
 USER_EXCLUDED_BILL_NOS = set()
+HUB_X_BILL_NOS = {"2221727"}
 
 
 def main() -> int:
@@ -123,6 +124,13 @@ def main() -> int:
                 entry.pop("hub_lifecycle_outbox", None)
                 entry["tracking_excluded_reason"] = "USER_DELETED_BILL"
                 print(f"[INFO] 사용자 삭제 의안 상태추적/미전송 outbox 제거: {bill_no}")
+                status_monitor.monitor.save_seen(seen)
+                continue
+            if bill_no in HUB_X_BILL_NOS:
+                entry["status_tracking"] = False
+                entry.pop("hub_lifecycle_outbox", None)
+                entry["tracking_excluded_reason"] = "HUB_X"
+                print(f"[INFO] HUB X 판정 의안 상태추적 중단: {bill_no}")
                 status_monitor.monitor.save_seen(seen)
                 continue
             if entry.get("status_tracking") is False:
