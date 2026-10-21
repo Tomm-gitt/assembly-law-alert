@@ -1,0 +1,26 @@
+name: "[감사] historical BILL_ID 보강"
+on:
+  push:
+    branches: [audit/2026-six-laws-census]
+    paths:
+      - 'audit_resolve_bill_ids.py'
+      - '.github/workflows/audit-resolve-bill-ids.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python audit_resolve_bill_ids.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-resolved-bill-ids
+          path: audit_resolved_bill_ids.json
