@@ -98,6 +98,9 @@ def _escalation_change(entry, now):
     }
 
 
+USER_EXCLUDED_BILL_NOS = {"2221727"}
+
+
 def main() -> int:
     seen = status_monitor.monitor.load_seen()
     if not seen:
@@ -114,6 +117,14 @@ def main() -> int:
     try:
         # 실행 중 위원회 대안이 새로 seen에 추가될 수 있으므로 시작 시점 목록만 순회한다.
         for bill_id, entry in list(seen.items()):
+            bill_no = status_monitor.clean(entry.get("bill_no"))
+            if bill_no in USER_EXCLUDED_BILL_NOS:
+                entry["status_tracking"] = False
+                entry.pop("hub_lifecycle_outbox", None)
+                entry["tracking_excluded_reason"] = "USER_DELETED_BILL"
+                print(f"[INFO] 사용자 삭제 의안 상태추적/미전송 outbox 제거: {bill_no}")
+                status_monitor.monitor.save_seen(seen)
+                continue
             if entry.get("status_tracking") is False:
                 print(f"[INFO] 상태추적 제외: {entry.get('bill_no') or bill_id}")
                 continue
