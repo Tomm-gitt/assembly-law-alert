@@ -98,7 +98,7 @@ def _escalation_change(entry, now):
     }
 
 
-USER_EXCLUDED_BILL_NOS = {"2221727"}
+USER_EXCLUDED_BILL_NOS = set()
 
 
 def main() -> int:
