@@ -215,7 +215,7 @@
       }
     },
     "last_status_changed_at": "2026-10-03T06:35:05+09:00",
-    "last_status_checked_at": "2026-10-21T08:04:03+09:00",
+    "last_status_checked_at": "2026-10-22T08:10:00+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-02",
@@ -228,8 +228,7 @@
     "matched_law": "전자상거래 등에서의 소비자보호에 관한 법률",
     "post_plenary_master_initialized_at": "2026-10-02T06:39:06+09:00",
     "proposal_date": "2026-10-01",
-    "status_tracking": false,
-    "tracking_excluded_reason": "USER_DELETED_BILL"
+    "status_tracking": true
   },
   "PRC_9DCD75E9C9C842F7B3307DB8456A6A": {
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
