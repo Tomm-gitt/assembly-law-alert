@@ -17,6 +17,19 @@ STAGE_FIELDS = {
 def payload_for(alert):
     stage = alert['stage']
     snapshot = alert.get('lifecycle') or {}
+    # Use the official disposal result date, never the observation/transition date.
+    disposal_date = None
+    for result_field, date_field in [('plenary_result', 'plenary_date'), ('committee_process_result', 'committee_process_date')]:
+        if '대안반영폐기' in ''.join(str(snapshot.get(result_field) or '').split()):
+            disposal_date = snapshot.get(date_field)
+            if not disposal_date:
+                raise ValueError('Missing verified alternative disposal date')
+            break
+    if alert.get('alternative_reflection') and not disposal_date:
+        raise ValueError('Missing verified alternative disposal date')
+    if disposal_date:
+        alert = {**alert, 'stage': '대안반영폐기', 'stage_date': disposal_date}
+        stage = alert['stage']
     date = alert.get('stage_date') or snapshot.get(STAGE_FIELDS.get(stage, ''))
     if not date and stage == '발의/접수':
         date = alert.get('proposal_date')
@@ -79,3 +92,4 @@ def flush(seen, now, post=None, save=None):
                 print(f"[ERROR] HUB lifecycle pending: {entry.get('bill_no') or bill_id} / {exc}")
             save(seen)  # ACK only after all HUB projections + queue intent are verified
     return failures
+

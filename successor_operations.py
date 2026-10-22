@@ -30,6 +30,7 @@ def register_verified_successor(
         successor_entry["hub_source_id"] = inherited_hub_source_id
         original_entry["hub_source_id"] = inherited_hub_source_id
 
+    successor_entry["successor_relationship_source"] = str(successor.get("relationship_source") or "likms_selRefBillId")
     original_entry["successor_resolution_status"] = "resolved"
     original_entry["successor_bill_no"] = successor_no
     original_entry["successor_evidence_source"] = str(successor.get("relationship_source") or "likms_selRefBillId")
@@ -40,3 +41,4 @@ def register_verified_successor(
     if not already_announced:
         successor_entry["succession_transition_announced_at"] = now
     return successor_entry, not already_announced
+

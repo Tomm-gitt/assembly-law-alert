@@ -14,5 +14,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python -m unittest test_content_enrichment test_notification_contract test_lifecycle_delivery test_mobile_summary
+      - run: python -m unittest test_content_enrichment test_notification_contract test_lifecycle_delivery test_mobile_summary test_report_relationship
 

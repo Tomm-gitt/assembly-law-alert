@@ -180,7 +180,9 @@ def build_new_bill_payload(bill: Dict) -> Dict:
         "eventType": "NEW_BILL",
         "sourceOrg": "국회",
         "sourceType": "신규 법률안",
-        "sourceId": _clean(bill.get("hub_source_id") or bill.get("bill_id")),
+        "sourceId": _clean(bill.get("bill_id") if bill.get("origin_bill_nos") else bill.get("hub_source_id") or bill.get("bill_id")),
+        "alternativeOrigins": bill.get("origin_bill_nos") or [],
+        "relationshipSource": _clean(bill.get("successor_relationship_source")),
         "title": _clean(bill.get("bill_name")),
         "publishedDate": _normalize_date(bill.get("proposal_date")),
         "currentStage": _clean(bill.get("process_result")) or "발의/접수",
@@ -212,7 +214,9 @@ def build_status_payload(alert: Dict) -> Dict:
         "eventType": "STATUS_CHANGE",
         "sourceOrg": "국회",
         "sourceType": "법률안 진행상태",
-        "sourceId": _clean(alert.get("hub_source_id") or alert.get("bill_id")),
+        "sourceId": _clean(alert.get("bill_id") if alert.get("origin_bill_nos") else alert.get("hub_source_id") or alert.get("bill_id")),
+        "alternativeOrigins": alert.get("origin_bill_nos") or [],
+        "relationshipSource": _clean(alert.get("successor_relationship_source")),
         "title": _clean(alert.get("bill_name")),
         "publishedDate": _normalize_date(alert.get("proposal_date")),
         "originalUrl": _clean(alert.get("detail_link")).replace("http://", "https://", 1),
@@ -320,3 +324,4 @@ if __name__ == "__main__":
     import json
 
     print(json.dumps(test_build_new_bill_payload(), ensure_ascii=False, indent=2))
+

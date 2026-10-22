@@ -5,6 +5,7 @@ import requests
 
 import status_monitor
 import lifecycle_delivery
+import content_enrichment
 from alternative_successor import is_alternative_reflection_result
 from post_plenary import fetch_post_plenary_status
 from successor_operations import register_verified_successor
@@ -148,6 +149,13 @@ def main() -> int:
                 query_failures.append(entry.get("bill_no") or bill_id)
                 continue
 
+            # A verified alternative gets its own HUB row and its own source summary.
+            if entry.get("origin_bill_nos") and (not entry.get("content") or entry.get("content_status") == "FAILED"):
+                try:
+                    content_enrichment.enrich_bill(entry, session=session)
+                except Exception as exc:
+                    entry["content_status"] = "FAILED"
+                    entry["content_error"] = str(exc)
             previous = entry.get("lifecycle") if isinstance(entry.get("lifecycle"), dict) else {}
             current = status_monitor.merge_snapshot(previous, current_raw)
             changes = status_monitor.detect_changes(previous, current)
@@ -281,7 +289,7 @@ def main() -> int:
                 own_alerts = [a for a in alerts if a.get("bill_id") == bill_id]
                 for alert in own_alerts:
                     lifecycle_delivery.enqueue(entry, alert, now, force=force_test)
-                if not own_alerts and not entry.get("alternative_reflection") and not _alternative_reflected(current_raw):
+                if not own_alerts:
                     lifecycle_delivery.enqueue(entry, {
                         **entry, "bill_id": bill_id,
                         "detail_link": current.get("detail_link"),
@@ -307,4 +315,5 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 
