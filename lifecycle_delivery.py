@@ -42,6 +42,15 @@ def payload_for(alert):
         raise ValueError('Missing lifecycle event date')
     p = hub_notify.build_status_payload({**alert, 'stage_date': date})
     p['lifecycleSync'] = VERSION
+    p = delivery_payload(alert, p)
+    return p
+
+def delivery_payload(entry, payload):
+    """Add suppression evidence to a transport copy, including pre-fix failed intents."""
+    p = dict(payload)
+    if entry.get('historical_baseline') and entry.get('historical_baseline_initialized_at'):
+        p['historicalBaseline'] = entry['historical_baseline']
+        p['historicalBaselineAt'] = entry['historical_baseline_initialized_at']
     return p
 
 def event_key(p):
@@ -81,7 +90,9 @@ def flush(seen, now, post=None, save=None):
             item['last_attempt_at'] = now
             save(seen)  # durable intent before network; an ambiguous reply remains retryable
             try:
-                result = post(item['payload'])
+                if key != event_key(item['payload']) or item['payload'].get('sourceId') != bill_id or str(item['payload'].get('billNo')) != str(entry.get('bill_no')):
+                    raise RuntimeError('OUTBOX_IDENTITY_MISMATCH')
+                result = post(delivery_payload(entry, item['payload']))
                 receipt = verify_receipt(result, item['payload'])
                 entry.setdefault('hub_lifecycle_receipts', {})[key] = {**receipt, 'verified_at': now}
                 del pending[key]
@@ -92,4 +103,5 @@ def flush(seen, now, post=None, save=None):
                 print(f"[ERROR] HUB lifecycle pending: {entry.get('bill_no') or bill_id} / {exc}")
             save(seen)  # ACK only after all HUB projections + queue intent are verified
     return failures
+
 

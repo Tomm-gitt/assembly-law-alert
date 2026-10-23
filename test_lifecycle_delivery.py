@@ -61,6 +61,26 @@ class LifecycleTests(unittest.TestCase):
         e=entry();d.enqueue(e,alert(e),NOW);old=copy.deepcopy(e['hub_lifecycle_outbox'])
         e['bill_name']='changed';d.enqueue(e,alert(e),'2026-10-01T06:00:00+09:00')
         self.assertEqual(old,e['hub_lifecycle_outbox'])
+    def test_historical_pending_transport_preserves_intent_and_suppresses_old_event(self):
+        e=entry();d.enqueue(e,alert(e),NOW)
+        e.update(historical_baseline='HISTORICAL_O_BASELINE_20261021',historical_baseline_initialized_at='2026-10-21T18:10:41+09:00')
+        original=copy.deepcopy(next(iter(e['hub_lifecycle_outbox'].values()))['payload']);calls=[]
+        def fail(p):
+            calls.append(copy.deepcopy(p));raise RuntimeError('lost reply')
+        d.flush({BID:e},NOW,fail,lambda s:None)
+        self.assertEqual(next(iter(e['hub_lifecycle_outbox'].values()))['payload'],original)
+        self.assertEqual(calls[0]['historicalBaseline'],e['historical_baseline'])
+        self.assertEqual(d.event_key(calls[0]),d.event_key(original))
+        self.assertFalse(d.flush({BID:e},NOW,ack,lambda s:None))
+        self.assertEqual(len(e['hub_lifecycle_receipts']),1)
+        self.assertFalse(d.flush({BID:e},NOW,fail,lambda s:None))
+        self.assertEqual(len(calls),1)
+    def test_outbox_identity_mismatch_never_posts_or_clears(self):
+        for field in ['sourceId','billNo']:
+            e=entry();d.enqueue(e,alert(e),NOW);calls=[]
+            next(iter(e['hub_lifecycle_outbox'].values()))['payload'][field]='wrong'
+            self.assertTrue(d.flush({BID:e},NOW,lambda p:calls.append(p),lambda s:None))
+            self.assertFalse(calls);self.assertTrue(e['hub_lifecycle_outbox'])
     def run_main(self,e,post):
         snap=copy.deepcopy(e.get('lifecycle') or entry()['lifecycle'])
         with patch.object(sm.monitor,'load_seen',return_value={BID:e}),patch.object(sm.monitor,'save_seen'),patch.object(sm,'fetch_lifecycle',return_value=snap),patch('hub_notify._post',side_effect=post):
@@ -90,3 +110,4 @@ class LifecycleTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'PARTIAL_FAILURE'):runner.main()
         self.assertFalse(e['hub_lifecycle_outbox'])
 if __name__=='__main__':unittest.main()
+

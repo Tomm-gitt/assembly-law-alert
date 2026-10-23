@@ -1,0 +1,25 @@
+name: Silent historical outbox recovery
+on:
+  push:
+    branches: [fix/lifecycle-identity-20261023]
+    paths: ['replay_historical_outbox.py', '.github/workflows/replay-historical-silent.yml']
+permissions:
+  contents: read
+concurrency:
+  group: assembly-law-monitor-production
+  cancel-in-progress: false
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest test_lifecycle_delivery -q
+      - name: Replay historical pending intents without dispatch
+        env:
+          HUB_WEB_APP_URL: ${{ secrets.HUB_WEB_APP_URL }}
+        run: python replay_historical_outbox.py
