@@ -1,0 +1,25 @@
+name: Read-only lifecycle identity audit
+on:
+  push:
+    branches: [fix/lifecycle-identity-20261023]
+    paths: ['audit_identity_readonly.py', 'tests/identity-audit-ids.json', '.github/workflows/identity-audit-readonly.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests==2.32.3
+      - name: Read identifier mappings only
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python audit_identity_readonly.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: identity-audit-results
+          path: identity-audit-results.json
