@@ -1,8 +1,6 @@
 name: Reconcile Assembly lifecycle with HUB
 on:
-  push:
-    branches: [main]
-    paths: ['lifecycle_delivery.py', '.github/workflows/reconcile-lifecycle.yml']
+  # Production API reconciliation is explicit; code pushes run offline regressions only.
   workflow_dispatch:
 permissions:
   contents: write
@@ -49,3 +47,4 @@ jobs:
             git rebase origin/main
           done
           exit 1
+
