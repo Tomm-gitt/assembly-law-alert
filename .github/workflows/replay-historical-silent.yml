@@ -1,13 +1,11 @@
 name: Silent historical outbox recovery
 on:
-  push:
-    branches: [fix/lifecycle-identity-20261023]
-    paths: ['replay_historical_outbox.py', '.github/workflows/replay-historical-silent.yml']
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: assembly-law-monitor-production
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   replay:
     runs-on: ubuntu-latest
