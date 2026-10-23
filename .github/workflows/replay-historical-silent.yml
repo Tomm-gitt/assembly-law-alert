@@ -7,7 +7,7 @@ permissions:
   contents: read
 concurrency:
   group: assembly-law-monitor-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   replay:
     runs-on: ubuntu-latest
