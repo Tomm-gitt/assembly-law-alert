@@ -47,7 +47,7 @@ jobs:
 
       - name: Lifecycle regression gate
         id: lifecycle_regressions
-        run: python -m unittest test_content_enrichment test_notification_contract test_lifecycle_delivery
+        run: python -m unittest test_content_enrichment test_mobile_summary test_summary_retry test_notification_contract test_lifecycle_delivery
 
       - name: Run new bill monitor
         env:
@@ -107,4 +107,5 @@ jobs:
 
           echo "State push failed after 3 attempts."
           exit 1
+
 

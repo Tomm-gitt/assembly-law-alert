@@ -32,12 +32,17 @@ def enrich_and_send_to_hub(bills):
     if not bills:
         return
 
-    try:
-        enrich_bills(bills)
-        hub_notify.send_new_bills(bills)
-    except Exception:
-        _rollback_seen_for_failed_delivery(bills)
-        raise
+    failures = []
+    for bill in bills:
+        try:
+            enrich_bills([bill])
+            hub_notify.send_new_bills([bill])
+        except Exception as exc:
+            _rollback_seen_for_failed_delivery([bill])
+            failures.append(str(bill.get("bill_no") or "unknown"))
+            print(f"[WARN] 신규 의안 처리 보류: {bill.get('bill_no')} / {type(exc).__name__}")
+    if failures:
+        raise RuntimeError("ASSEMBLY_DELIVERY_PENDING: " + ",".join(failures))
 
     print(f"[INFO] 국회 신규 의안 HUB 전송 전용 처리 완료: {len(bills)}건")
 
@@ -52,3 +57,4 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         raise
+

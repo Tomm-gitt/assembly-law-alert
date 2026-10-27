@@ -1,0 +1,38 @@
+name: Assembly summary quality
+on:
+  push:
+    paths:
+      - content_enrichment.py
+      - telegram_enriched_runner.py
+      - test_summary_retry.py
+      - .github/workflows/summary-quality.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest test_content_enrichment test_mobile_summary test_summary_retry test_notification_contract test_lifecycle_delivery
+      - name: Verify combined-source bill without sending or changing state
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ASSEMBLY_GEMINI_MODEL: ${{ secrets.ASSEMBLY_GEMINI_MODEL }}
+        run: |
+          python - <<'PY'
+          import json
+          from content_enrichment import fetch_bill_content, summarize_bill_with_ai
+          bill = {'bill_no':'2222153','bill_name':'가맹사업거래의 공정화에 관한 법률 일부개정법률안','matched_law':'가맹사업거래의 공정화에 관한 법률'}
+          source = fetch_bill_content(bill)
+          combined = '\n'.join([source.get('proposal_reason',''), source.get('main_content','')]).strip()
+          assert len(combined)>100, 'SOURCE_NOT_READY'
+          result = summarize_bill_with_ai(bill, '', combined)
+          assert result['aiUsed'] is True
+          assert '14' in ''.join(result['mainItems']), 'DEADLINE_MISSING'
+          print(json.dumps(result, ensure_ascii=False, indent=2))
+          PY

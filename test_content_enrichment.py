@@ -42,11 +42,11 @@ class Tests(unittest.TestCase):
     def test_empty_direct_summary_no_api(self,post):
         self.assertFalse(c.summarize_bill_with_ai({},'','')['aiUsed'])
         post.assert_not_called()
+    @patch.dict('os.environ', {'GEMINI_API_KEY': ''})
     @patch.object(c.requests,'post')
-    def test_combined_unsplit_preserves_source(self,post):
-        result=c.summarize_bill_with_ai({},'',REASON+' '+MAIN)
-        self.assertEqual(result['reason'],'')
-        self.assertIn(MAIN,' '.join(result['mainItems']))
+    def test_combined_unsplit_missing_key_is_pending(self,post):
+        with self.assertRaisesRegex(RuntimeError, 'SUMMARY_NOT_READY'):
+            c.summarize_bill_with_ai({},'',REASON+' '+MAIN)
         post.assert_not_called()
     def test_reject_generated_absence_claim(self):
         with self.assertRaisesRegex(ValueError,'UNSUPPORTED'):
@@ -65,3 +65,4 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'CHANGED'):build_master_content_patch(row,bill,'stale',36,2027368541)
 
 if __name__=='__main__':unittest.main()
+

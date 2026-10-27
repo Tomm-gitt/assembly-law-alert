@@ -402,6 +402,7 @@ def _build_ai_prompt(
 당신은 대한민국 기업의 국회 법률안 모니터링 담당자를 지원하는 요약 도우미입니다.
 
 아래 내용은 국회에 제출된 법률안의 제안이유와 주요내용 원문입니다.
+수집 형식에 따라 한 칸이 비어 있고 다른 칸에 전체 원문이 함께 들어올 수 있습니다. 빈 칸을 원문 누락으로 판단하지 말고 제공된 전체 원문에서 배경과 변경사항을 구분하십시오.
 
 목적:
 원문의 법적 의미와 실무 판단에 필요한 세부사항을 최대한 보존하면서,
@@ -490,21 +491,13 @@ def summarize_bill_with_ai(
 ) -> Dict:
     if not has_source_content({"proposal_reason": reason, "main_content": main}):
         return {"reason": "", "mainItems": [], "aiUsed": False, "aiModel": ""}
-    if not clean_inline(reason) or not clean_inline(main):
-        return {"reason": summarize_reason(reason), "mainItems": main_content_points(main),
-                "aiUsed": False, "aiModel": ""}
 
     api_key = str(
         os.getenv("GEMINI_API_KEY") or ""
     ).strip()
 
     if not api_key:
-        return {
-            "reason": summarize_reason(reason),
-            "mainItems": main_content_points(main),
-            "aiUsed": False,
-            "aiModel": "",
-        }
+        raise RuntimeError("ASSEMBLY_SUMMARY_NOT_READY: GEMINI_API_KEY missing")
 
     prompt = _build_ai_prompt(
         bill,
@@ -628,17 +621,7 @@ def summarize_bill_with_ai(
                 if attempt < 2:
                     time.sleep(1.5 * attempt)
 
-    print(
-        "[WARN] 모든 Gemini 모델 실패 - 비AI fallback 사용:",
-        str(last_error)[:500],
-    )
-
-    return {
-        "reason": summarize_reason(reason),
-        "mainItems": main_content_points(main),
-        "aiUsed": False,
-        "aiModel": "",
-    }
+    raise RuntimeError("ASSEMBLY_SUMMARY_NOT_READY: all models failed") from last_error
 
 
 def build_collector_content(
@@ -776,3 +759,4 @@ if __name__ == "__main__":
             indent=2,
         )
     )
+
