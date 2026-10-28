@@ -1,0 +1,24 @@
+name: Verify promulgated law enforcement dates
+on:
+  push:
+    paths: ['law_enforcement_audit.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - env:
+          LAW_API_OC: ${{ secrets.LAW_API_OC }}
+        run: python law_enforcement_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: law-enforcement-audit
+          path: lifecycle-audit/
