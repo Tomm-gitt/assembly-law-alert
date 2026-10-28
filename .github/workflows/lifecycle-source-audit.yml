@@ -1,0 +1,27 @@
+name: Read-only lifecycle source audit
+on:
+  push:
+    paths: ['lifecycle_source_audit.py', 'lifecycle_audit_input.json']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - name: Read official bill sources without notifications
+        env:
+          ASSEMBLY_API_KEY: ${{ secrets.ASSEMBLY_API_KEY }}
+        run: python lifecycle_source_audit.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lifecycle-source-audit
+          path: lifecycle-audit/
+
