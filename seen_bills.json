@@ -25,7 +25,7 @@
       }
     },
     "last_status_changed_at": "2026-10-08T06:34:37+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-07",
@@ -65,7 +65,7 @@
       }
     },
     "last_status_changed_at": "2026-11-04T06:36:44+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-11-03",
@@ -137,7 +137,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "",
       "committee_referral_date": "",
@@ -177,7 +177,7 @@
       }
     },
     "last_status_changed_at": "2026-10-30T06:34:14+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-29",
@@ -217,7 +217,7 @@
       }
     },
     "last_status_changed_at": "2026-10-30T06:34:14+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-29",
@@ -257,7 +257,7 @@
       }
     },
     "last_status_changed_at": "2026-10-29T06:44:39+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-28",
@@ -312,6 +312,36 @@
     "proposal_date": "2026-10-02",
     "status_tracking": false,
     "tracking_excluded_reason": "HUB_X_OR_TERMINAL_20261021"
+  },
+  "PRC_5EE530A04BED4446973D6E52ADD6E0": {
+    "bill_name": "식품위생법 일부개정법률안",
+    "bill_no": "2222410",
+    "first_seen_at": "2026-11-04T07:33:38+09:00",
+    "hub_lifecycle_outbox": {},
+    "hub_lifecycle_receipts": {
+      "ASSEMBLY_STAGE|국회|PRC_5EE530A04BED4446973D6E52ADD6E0|발의/접수|2026-11-03": {
+        "currentStage": "발의/접수",
+        "eventKey": "ASSEMBLY_STAGE|국회|PRC_5EE530A04BED4446973D6E52ADD6E0|발의/접수|2026-11-03",
+        "outcome": "UNCHANGED",
+        "projectionsConsistent": true,
+        "systemKey": "국회|PRC_5EE530A04BED4446973D6E52ADD6E0",
+        "verified_at": "2026-11-04T07:35:17+09:00",
+        "version": "2026-09-30-v1"
+      }
+    },
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
+    "lifecycle": {
+      "committee": "",
+      "committee_referral_date": "",
+      "detail_link": "http://likms.assembly.go.kr/bill/billDetail.do?billId=PRC_5EE530A04BED4446973D6E52ADD6E0&ageFrom=22&ageTo=22",
+      "government_transfer_date": "",
+      "law_submit_date": "",
+      "plenary_date": ""
+    },
+    "lifecycle_initialized_at": "2026-11-04T07:35:17+09:00",
+    "matched_law": "식품위생법",
+    "post_plenary_master_initialized_at": "2026-11-04T07:45:23+09:00",
+    "proposal_date": "2026-11-03"
   },
   "PRC_6F27301521624A2C9378B1558C5DD2": {
     "bill_name": "독점규제 및 공정거래에 관한 법률 일부개정법률안",
@@ -447,7 +477,7 @@
       }
     },
     "last_status_changed_at": "2026-10-24T06:34:27+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-23",
@@ -520,7 +550,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2025-03-27",
@@ -562,7 +592,7 @@
       }
     },
     "last_status_changed_at": "2026-10-29T06:44:39+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-10-28",
@@ -593,7 +623,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-02",
@@ -658,7 +688,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-06",
@@ -801,7 +831,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-17",
@@ -834,7 +864,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-11",
@@ -867,7 +897,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-03",
@@ -900,7 +930,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-06-13",
@@ -933,7 +963,7 @@
       }
     },
     "last_status_changed_at": "2026-09-11T06:34:32+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-10",
@@ -964,7 +994,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-11-17",
@@ -1048,7 +1078,7 @@
       }
     },
     "last_status_changed_at": "2026-10-28T06:35:09+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-10-27",
@@ -1079,7 +1109,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "농림축산식품해양수산위원회",
       "committee_referral_date": "2024-06-12",
@@ -1145,7 +1175,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -1178,7 +1208,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-17",
@@ -1210,7 +1240,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-21",
@@ -1241,7 +1271,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-19",
@@ -1274,7 +1304,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-03",
@@ -1307,7 +1337,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-07-11",
@@ -1340,7 +1370,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-03-26",
@@ -1406,7 +1436,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-01",
@@ -1439,7 +1469,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -1472,7 +1502,7 @@
       }
     },
     "last_status_changed_at": "2026-09-22T06:34:29+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-21",
@@ -1503,7 +1533,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-03-26",
@@ -1536,7 +1566,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-04-28",
@@ -1601,7 +1631,7 @@
       }
     },
     "last_status_changed_at": "2026-09-15T06:35:05+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-14",
@@ -1665,7 +1695,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-12",
@@ -1698,7 +1728,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-04",
@@ -1731,7 +1761,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-28",
@@ -1764,7 +1794,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-01-02",
@@ -1797,7 +1827,7 @@
       }
     },
     "last_status_changed_at": "2026-08-27T09:56:19+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-08-26",
@@ -1861,7 +1891,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -1894,7 +1924,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-12-24",
@@ -1927,7 +1957,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-13",
@@ -1960,7 +1990,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-09",
@@ -1993,7 +2023,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-03-03",
@@ -2092,7 +2122,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-02-13",
@@ -2125,7 +2155,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-09-04",
@@ -2191,7 +2221,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-09-05",
@@ -2224,7 +2254,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-04-13",
@@ -2256,7 +2286,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-09",
@@ -2287,7 +2317,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-04-11",
@@ -2353,7 +2383,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2025-07-21",
@@ -2421,7 +2451,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-11-06",
@@ -2454,7 +2484,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-10",
@@ -2487,7 +2517,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-11-12",
@@ -2520,7 +2550,7 @@
       }
     },
     "last_status_changed_at": "2026-09-03T06:34:34+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-09-02",
@@ -2560,7 +2590,7 @@
       }
     },
     "last_status_changed_at": "2026-10-30T06:34:14+09:00",
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "보건복지위원회",
       "committee_referral_date": "2026-10-29",
@@ -2591,7 +2621,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2024-06-27",
@@ -2624,7 +2654,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-29",
@@ -2657,7 +2687,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-01-16",
@@ -2690,7 +2720,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-01-19",
@@ -2723,7 +2753,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2025-12-23",
@@ -2756,7 +2786,7 @@
         "version": "2026-09-30-v1"
       }
     },
-    "last_status_checked_at": "2026-11-04T07:06:57+09:00",
+    "last_status_checked_at": "2026-11-04T07:35:17+09:00",
     "lifecycle": {
       "committee": "정무위원회",
       "committee_referral_date": "2026-07-01",
